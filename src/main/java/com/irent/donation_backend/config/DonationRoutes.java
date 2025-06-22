@@ -3,21 +3,20 @@ package com.irent.donation_backend.config;
 import com.irent.donation_backend.api.DonationHandler;
 import com.irent.donation_backend.model.Customer;
 import com.irent.donation_backend.service.DonationService;
-import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import org.springdoc.core.fn.builders.operation.Builder;
 import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import java.util.function.Consumer;
 
 import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
 import static org.springdoc.core.fn.builders.content.Builder.contentBuilder;
-import static org.springdoc.core.fn.builders.requestbody.Builder.requestBodyBuilder;
+import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
 import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 
 @Configuration
@@ -43,6 +42,13 @@ public class DonationRoutes {
                     .operationId("Get Customer Info")
                     .summary("取得捐款目標機構資訊")
                     .description("取得捐款目標機構資訊")
+                    .parameter(parameterBuilder()
+                            .name("name")
+                            .in(ParameterIn.PATH)
+                            .required(true)
+                            .description("Customer name")
+                            .schema(schemaBuilder().type("string"))
+                    )
                     .response(responseBuilder()
                             .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(Customer.class)))
                             .responseCode("200")
