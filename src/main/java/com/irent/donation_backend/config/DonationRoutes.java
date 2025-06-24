@@ -24,6 +24,7 @@ public class DonationRoutes {
 
     private static final String MAIN_REQUEST_MAPPING = "/api/donation";
     private static final String GET_CUSTOMER_MAPPING = "/customer/{name}";
+    private static final String TEST = "/test";
 
     @Bean
     public DonationHandler donationHandler(DonationService donationService) {
@@ -32,7 +33,8 @@ public class DonationRoutes {
 
     @Bean
     public RouterFunction<ServerResponse> donationRouterFunctionSwagger(final DonationHandler handler) {
-        return getCustomerFunctionSwagger(handler);
+        return getCustomerFunctionSwagger(handler)
+                .and(test(handler));
     }
 
     protected RouterFunction<ServerResponse> getCustomerFunctionSwagger(final DonationHandler handler) {
@@ -58,6 +60,24 @@ public class DonationRoutes {
         };
         return SpringdocRouteBuilder.route().path(MAIN_REQUEST_MAPPING,
                 builder -> builder.GET(GET_CUSTOMER_MAPPING, handler::getCustomer), result).build();
+    }
+
+    protected RouterFunction<ServerResponse> test(final DonationHandler handler) {
+        final Consumer<Builder> result = ops -> {
+            ops.beanClass(DonationHandler.class)
+                    .beanMethod("test")
+                    .operationId("For test")
+                    .summary("測試用")
+                    .description("測試用")
+                    .response(responseBuilder()
+                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE))
+                            .responseCode("200")
+                            .description("successful operation")
+                    );
+            commonProcess(ops);
+        };
+        return SpringdocRouteBuilder.route().path(MAIN_REQUEST_MAPPING,
+                builder -> builder.GET(TEST, handler::test), result).build();
     }
 
     protected void commonProcess(final Builder builder) {

@@ -14,6 +14,20 @@ public class BeanConfig {
     }
 
     @Bean
+    public WebClient authWebClient(WebClient.Builder builder, LarkProperties properties) {
+        return builder
+                .baseUrl(properties.getAUTH_URL())
+                .build();
+    }
+
+    @Bean
+    public WebClient bitableWebClient(WebClient.Builder builder, LarkProperties properties) {
+        return builder
+                .baseUrl(properties.getBITABLE_URL())
+                .build();
+    }
+
+    @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }

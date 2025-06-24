@@ -13,4 +13,7 @@ public class LarkProperties {
     private String AUTH_URL;
     private String APP_ID;
     private String APP_SECRET;
+    private String APP_TOKEN;
+    private String TABLE_ID;
+    private String BITABLE_URL;
 }
