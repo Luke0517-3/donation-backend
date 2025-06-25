@@ -1,5 +1,6 @@
 package com.irent.donation_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,17 +17,9 @@ import java.math.BigDecimal;
 public class Customer {
 
     @Schema(description = "ID")
-    private String id;
+    private NGOEnvItem fields;
 
     @Schema(description = "商店key")
-    private String name;
-
-    @Schema(description = "商店value")
-    private String value;
-
-    @Schema(description = "是否有預設金額")
-    private Boolean isDefault;
-
-    @Schema(description = "預設金額")
-    private BigDecimal amount;
+    @JsonAlias("record_id")
+    private String recordId;
 }

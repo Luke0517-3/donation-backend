@@ -1,8 +1,6 @@
 package com.irent.donation_backend.service.impl;
 
-import com.irent.donation_backend.model.Customer;
-import com.irent.donation_backend.model.NGOEnvFields;
-import com.irent.donation_backend.model.NGOEnvItem;
+import com.irent.donation_backend.model.*;
 import com.irent.donation_backend.service.DonationService;
 import com.irent.donation_backend.service.LarkService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +9,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -19,11 +18,8 @@ public class DonationServiceImpl implements DonationService {
     private final LarkService larkService;
 
     @Override
-    public Customer queryCustomer(String name) {
-        return Customer.builder()
-                .name(name)
-                .amount(BigDecimal.valueOf(500))
-                .build();
+    public Mono<LarkResponse<Customer>> queryStoreInfo(String name) {
+        return larkService.getTargetStoreInfo(name);
     }
 
     @Override
@@ -31,7 +27,7 @@ public class DonationServiceImpl implements DonationService {
         return larkService.listLarkBaseNGOEnv()
                 .map(items ->
                         items.stream()
-                                .map(NGOEnvItem::getFields)
+                                .map(NGOEnvListItem::getFields)
                                 .toList()
                 );
     }

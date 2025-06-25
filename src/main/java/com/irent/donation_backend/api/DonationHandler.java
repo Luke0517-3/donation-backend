@@ -1,6 +1,8 @@
 package com.irent.donation_backend.api;
 
 import com.irent.donation_backend.model.Customer;
+import com.irent.donation_backend.model.LarkResponse;
+import com.irent.donation_backend.model.NGOEnvItem;
 import com.irent.donation_backend.service.DonationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,11 +23,12 @@ public class DonationHandler {
     // 獲取捐款對象資訊
     public Mono<ServerResponse> getCustomer(ServerRequest request) {
         String name = request.pathVariable("name");
-        return Mono.fromSupplier(() -> donationService.queryCustomer(name))
-                .flatMap(customer ->
+        return donationService.queryStoreInfo(name).flatMap(fields ->
                         ServerResponse.ok()
-                                .body(Mono.just(customer), Customer.class)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(Mono.just(fields), LarkResponse.class)
                 )
+                .switchIfEmpty(ServerResponse.noContent().build())
                 .log(log.getName());
     }
 

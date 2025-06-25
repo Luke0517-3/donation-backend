@@ -2,6 +2,7 @@ package com.irent.donation_backend.config;
 
 import com.irent.donation_backend.api.DonationHandler;
 import com.irent.donation_backend.model.Customer;
+import com.irent.donation_backend.model.LarkResponse;
 import com.irent.donation_backend.service.DonationService;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import org.springdoc.core.fn.builders.operation.Builder;

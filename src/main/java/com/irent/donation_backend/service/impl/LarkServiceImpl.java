@@ -5,7 +5,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.irent.donation_backend.config.LarkProperties;
+import com.irent.donation_backend.model.Customer;
+import com.irent.donation_backend.model.LarkResponse;
 import com.irent.donation_backend.model.NGOEnvItem;
+import com.irent.donation_backend.model.NGOEnvListItem;
 import com.irent.donation_backend.service.LarkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,8 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -49,7 +51,7 @@ public class LarkServiceImpl implements LarkService {
     }
 
     @Override
-    public Mono<List<NGOEnvItem>> listLarkBaseNGOEnv() {
+    public Mono<List<NGOEnvListItem>> listLarkBaseNGOEnv() {
         return getTenantAccessToken()
                 .flatMap(token ->
                         bitableWebClient
@@ -68,7 +70,35 @@ public class LarkServiceImpl implements LarkService {
                 );
     }
 
-    private List<NGOEnvItem> parseItemsFromJson(String jsonString) {
+    @Override
+    public Mono<LarkResponse<Customer>> getTargetStoreInfo(String path) {
+        Map<String, Object> requestBody = createDynamicRequestBody("PATH", "is", List.of(path));
+        return getTenantAccessToken()
+                .flatMap(token ->
+                        bitableWebClient
+                                .post()
+                                .uri(uriBuilder -> uriBuilder
+                                        .path("/{app_token}/tables/{table_id}/records/search")
+                                        .build(
+                                                larkProperties.getAPP_TOKEN(),
+                                                larkProperties.getTABLE_ID()
+                                        )
+                                )
+                                .header("Authorization", "Bearer " + token)
+                                .bodyValue(requestBody)
+                                .retrieve()
+                                .bodyToMono(String.class)
+                                .map(result -> {
+                                    try {
+                                        return objectMapper.readValue(result, new TypeReference<LarkResponse<Customer>>() {});
+                                    } catch (JsonProcessingException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                })
+                );
+    }
+
+    private List<NGOEnvListItem> parseItemsFromJson(String jsonString) {
         try {
             JsonNode rootNode = objectMapper.readTree(jsonString);
             JsonNode itemsNode = rootNode.path("data").path("items");
@@ -78,5 +108,30 @@ public class LarkServiceImpl implements LarkService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error parsing JSON", e);
         }
+    }
+
+    private Map<String, Object> createDynamicRequestBody(
+            String fieldName,
+            String operator,
+            List<String> values
+    ) {
+        Map<String, Object> requestBody = new HashMap<>();
+        Map<String, Object> filter = new HashMap<>();
+
+        List<Map<String, Object>> conditions = new ArrayList<>();
+        Map<String, Object> condition = new HashMap<>();
+
+        condition.put("field_name", fieldName);
+        condition.put("operator", operator);
+        condition.put("value", values);
+
+        conditions.add(condition);
+
+        filter.put("conditions", conditions);
+        filter.put("conjunction", "and");
+
+        requestBody.put("filter", filter);
+
+        return requestBody;
     }
 }

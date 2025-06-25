@@ -2,9 +2,16 @@ package com.irent.donation_backend.model;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Schema(description = "捐款目標資訊")
 public class NGOEnvFields {
     @JsonAlias("PATH")
     @Schema(description = "請求查詢路徑")
