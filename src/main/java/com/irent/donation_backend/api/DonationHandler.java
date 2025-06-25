@@ -1,7 +1,6 @@
 package com.irent.donation_backend.api;
 
 import com.irent.donation_backend.model.Customer;
-import com.irent.donation_backend.model.NGOEnvFields;
 import com.irent.donation_backend.service.DonationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -30,10 +31,10 @@ public class DonationHandler {
 
     public Mono<ServerResponse> test(ServerRequest request) {
         return donationService.test()
-                .flatMap(obj ->
+                .flatMap(fields ->
                         ServerResponse.ok()
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .body(Mono.just(obj), NGOEnvFields.class)
+                                .body(Mono.just(fields), List.class)
                 )
                 .switchIfEmpty(ServerResponse.noContent().build())
                 .onErrorResume(ex ->

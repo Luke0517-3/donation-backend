@@ -1,6 +1,7 @@
 package com.irent.donation_backend.service.impl;
 
 import com.irent.donation_backend.model.Customer;
+import com.irent.donation_backend.model.NGOEnvFields;
 import com.irent.donation_backend.model.NGOEnvItem;
 import com.irent.donation_backend.service.DonationService;
 import com.irent.donation_backend.service.LarkService;
@@ -19,12 +20,6 @@ public class DonationServiceImpl implements DonationService {
 
     @Override
     public Customer queryCustomer(String name) {
-        larkService.getTenantAccessToken()
-                .subscribe(
-                        token -> System.out.println("Tenant Access Token: " + token),
-                        error -> System.err.println("Error: " + error.getMessage())
-                );
-
         return Customer.builder()
                 .name(name)
                 .amount(BigDecimal.valueOf(500))
@@ -32,7 +27,12 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
-    public Mono<List<NGOEnvItem>> test() {
-        return larkService.listLarkBaseNGOEnv();
+    public Mono<List<NGOEnvFields>> test() {
+        return larkService.listLarkBaseNGOEnv()
+                .map(items ->
+                        items.stream()
+                                .map(NGOEnvItem::getFields)
+                                .toList()
+                );
     }
 }

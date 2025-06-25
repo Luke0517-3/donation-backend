@@ -8,15 +8,12 @@ import com.irent.donation_backend.config.LarkProperties;
 import com.irent.donation_backend.model.NGOEnvItem;
 import com.irent.donation_backend.service.LarkService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -76,10 +73,8 @@ public class LarkServiceImpl implements LarkService {
             JsonNode rootNode = objectMapper.readTree(jsonString);
             JsonNode itemsNode = rootNode.path("data").path("items");
 
-            return objectMapper.readValue(
-                    itemsNode.toString(),
-                    new TypeReference<List<NGOEnvItem>>() {}
-            );
+            return objectMapper.readValue(itemsNode.toString(), new TypeReference<>() {
+            });
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error parsing JSON", e);
         }
