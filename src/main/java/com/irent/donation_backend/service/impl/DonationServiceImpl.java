@@ -18,8 +18,11 @@ public class DonationServiceImpl implements DonationService {
     private final LarkService larkService;
 
     @Override
-    public Mono<LarkResponse<Customer>> queryStoreInfo(String name) {
-        return larkService.getTargetStoreInfo(name);
+    public Mono<NGOEnvItem> queryStoreInfo(String name) {
+        return larkService.getTargetStoreInfo(name)
+                .map(item ->
+                    item.getData().getItems().get(0).getFields()
+                );
     }
 
     @Override

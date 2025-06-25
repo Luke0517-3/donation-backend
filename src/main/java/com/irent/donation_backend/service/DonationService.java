@@ -11,7 +11,7 @@ import java.util.Objects;
 
 public interface DonationService {
 
-    Mono<LarkResponse<Customer>> queryStoreInfo(String name);
+    Mono<NGOEnvItem> queryStoreInfo(String name);
 
     Mono<List<NGOEnvFields>> test();
 }

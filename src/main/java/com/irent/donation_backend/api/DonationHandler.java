@@ -26,7 +26,7 @@ public class DonationHandler {
         return donationService.queryStoreInfo(name).flatMap(fields ->
                         ServerResponse.ok()
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .body(Mono.just(fields), LarkResponse.class)
+                                .body(Mono.just(fields), NGOEnvItem.class)
                 )
                 .switchIfEmpty(ServerResponse.noContent().build())
                 .log(log.getName());
