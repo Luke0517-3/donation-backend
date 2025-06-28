@@ -16,4 +16,5 @@ public class LarkProperties {
     private String APP_TOKEN;
     private String TABLE_ID;
     private String BITABLE_URL;
+    private String ORDER_TABLE_ID;
 }

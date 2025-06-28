@@ -28,8 +28,7 @@ public class DonationHandler {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .body(Mono.just(fields), NGOEnvItem.class)
                 )
-                .switchIfEmpty(ServerResponse.noContent().build())
-                .log(log.getName());
+                .switchIfEmpty(ServerResponse.noContent().build());
     }
 
     public Mono<ServerResponse> test(ServerRequest request) {
@@ -43,7 +42,6 @@ public class DonationHandler {
                 .onErrorResume(ex ->
                         ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                 .body(Mono.just(ex.getMessage()), String.class)
-                )
-                .log(log.getName());
+                );
     }
 }

@@ -115,23 +115,22 @@ public class LarkServiceImpl implements LarkService {
             String operator,
             List<String> values
     ) {
-        Map<String, Object> requestBody = new HashMap<>();
-        Map<String, Object> filter = new HashMap<>();
+        // 參數驗證
+        Objects.requireNonNull(fieldName, "fieldName cannot be null");
+        Objects.requireNonNull(operator, "operator cannot be null");
+        Objects.requireNonNull(values, "values cannot be null");
 
-        List<Map<String, Object>> conditions = new ArrayList<>();
-        Map<String, Object> condition = new HashMap<>();
+        // 創建條件
+        Map<String, Object> condition = Map.of(
+                "field_name", fieldName,
+                "operator", operator,
+                "value", values
+        );
 
-        condition.put("field_name", fieldName);
-        condition.put("operator", operator);
-        condition.put("value", values);
-
-        conditions.add(condition);
-
-        filter.put("conditions", conditions);
-        filter.put("conjunction", "and");
-
-        requestBody.put("filter", filter);
-
-        return requestBody;
+        // 創建過濾器和請求體
+        return Map.of("filter", Map.of(
+                "conditions", List.of(condition),
+                "conjunction", "and"
+        ));
     }
 }
