@@ -1,5 +1,6 @@
 package com.irent.donation_backend.service.impl;
 
+import com.irent.donation_backend.common.CommonConstant;
 import com.irent.donation_backend.model.*;
 import com.irent.donation_backend.service.DonationService;
 import com.irent.donation_backend.service.LarkService;
@@ -26,12 +27,13 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
-    public Mono<List<NGOEnvFields>> test() {
-        return larkService.listLarkBaseNGOEnv()
-                .map(items ->
-                        items.stream()
-                                .map(NGOEnvListItem::getFields)
-                                .toList()
-                );
+    public Mono<String> test(NGOOrderFields orderFields) {
+        return larkService.createDonationOrder(orderFields)
+                .map(result -> switch(result) {
+            case "success" -> CommonConstant.SUCCESS_MSG.toLowerCase();
+            case "失敗" -> "操作失敗";
+            case "處理中" -> "請稍後查詢";
+            default -> "未知狀態: " + result;
+        });
     }
 }

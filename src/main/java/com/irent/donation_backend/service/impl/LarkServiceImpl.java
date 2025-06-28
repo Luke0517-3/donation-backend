@@ -5,10 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.irent.donation_backend.config.LarkProperties;
-import com.irent.donation_backend.model.Customer;
-import com.irent.donation_backend.model.LarkResponse;
-import com.irent.donation_backend.model.NGOEnvItem;
-import com.irent.donation_backend.model.NGOEnvListItem;
+import com.irent.donation_backend.model.*;
 import com.irent.donation_backend.service.LarkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -93,6 +90,35 @@ public class LarkServiceImpl implements LarkService {
                                         return objectMapper.readValue(result, new TypeReference<LarkResponse<Customer>>() {});
                                     } catch (JsonProcessingException e) {
                                         throw new RuntimeException(e);
+                                    }
+                                })
+                );
+    }
+
+    @Override
+    public Mono<String> createDonationOrder(NGOOrderFields orderFields) {
+        Map<String, Object> requestBody = Map.of("fields", orderFields);
+        return getTenantAccessToken()
+                .flatMap(token ->
+                        bitableWebClient
+                                .post()
+                                .uri(uriBuilder -> uriBuilder
+                                        .path("/{app_token}/tables/{table_id}/records")
+                                        .build(
+                                                larkProperties.getAPP_TOKEN(),
+                                                larkProperties.getORDER_TABLE_ID()
+                                        )
+                                )
+                                .header("Authorization", "Bearer " + token)
+                                .bodyValue(requestBody)
+                                .retrieve()
+                                .bodyToMono(String.class)
+                                .handle((result, sink) -> {
+                                    try {
+                                        JsonNode root = objectMapper.readTree(result);
+                                        sink.next(root.get("msg").asText());
+                                    } catch (JsonProcessingException e) {
+                                        sink.error(new RuntimeException(e));
                                     }
                                 })
                 );

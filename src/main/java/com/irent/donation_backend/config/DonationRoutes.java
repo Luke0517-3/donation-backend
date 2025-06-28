@@ -3,6 +3,7 @@ package com.irent.donation_backend.config;
 import com.irent.donation_backend.api.DonationHandler;
 import com.irent.donation_backend.model.Customer;
 import com.irent.donation_backend.model.LarkResponse;
+import com.irent.donation_backend.model.NGOOrderFields;
 import com.irent.donation_backend.service.DonationService;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import org.springdoc.core.fn.builders.operation.Builder;
@@ -18,6 +19,7 @@ import java.util.function.Consumer;
 import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
 import static org.springdoc.core.fn.builders.content.Builder.contentBuilder;
 import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
+import static org.springdoc.core.fn.builders.requestbody.Builder.requestBodyBuilder;
 import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 
 @Configuration
@@ -70,15 +72,19 @@ public class DonationRoutes {
                     .operationId("For test")
                     .summary("測試用")
                     .description("測試用")
+                    .requestBody(requestBodyBuilder()  // 添加請求體文檔
+                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE)
+                                    .schema(schemaBuilder().implementation(NGOOrderFields.class)))
+                            .required(true))
                     .response(responseBuilder()
-                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE))
+                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(String.class)))
                             .responseCode("200")
                             .description("successful operation")
                     );
             commonProcess(ops);
         };
         return SpringdocRouteBuilder.route().path(MAIN_REQUEST_MAPPING,
-                builder -> builder.GET(TEST, handler::test), result).build();
+                builder -> builder.POST(TEST, handler::test), result).build();
     }
 
     protected void commonProcess(final Builder builder) {
