@@ -1,7 +1,5 @@
 package com.irent.donation_backend.api;
 
-import com.irent.donation_backend.model.Customer;
-import com.irent.donation_backend.model.LarkResponse;
 import com.irent.donation_backend.model.NGOEnvItem;
 import com.irent.donation_backend.model.NGOOrderFields;
 import com.irent.donation_backend.service.DonationService;
@@ -13,7 +11,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -35,7 +32,7 @@ public class DonationHandler {
 
     public Mono<ServerResponse> test(ServerRequest request) {
         return request.bodyToMono(NGOOrderFields.class)
-                .flatMap(orderFields -> donationService.test(orderFields))
+                .flatMap(donationService::test)
                 .flatMap(result ->
                         ServerResponse.ok()
                                 .contentType(MediaType.APPLICATION_JSON)

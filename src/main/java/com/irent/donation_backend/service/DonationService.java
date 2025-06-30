@@ -1,10 +1,8 @@
 package com.irent.donation_backend.service;
 
-import com.irent.donation_backend.model.*;
+import com.irent.donation_backend.model.NGOEnvItem;
+import com.irent.donation_backend.model.NGOOrderFields;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
-import java.util.Objects;
 
 public interface DonationService {
 

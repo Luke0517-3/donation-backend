@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.irent.donation_backend.common.Constants;
 import com.irent.donation_backend.config.LarkProperties;
 import com.irent.donation_backend.model.*;
 import com.irent.donation_backend.service.LarkService;
@@ -68,7 +69,7 @@ public class LarkServiceImpl implements LarkService {
     }
 
     @Override
-    public Mono<LarkResponse<Customer>> getTargetStoreInfo(String path) {
+    public Mono<Customer> getTargetStoreInfo(String path) {
         Map<String, Object> requestBody = createDynamicRequestBody("PATH", "is", List.of(path));
         return getTenantAccessToken()
                 .flatMap(token ->
@@ -87,7 +88,16 @@ public class LarkServiceImpl implements LarkService {
                                 .bodyToMono(String.class)
                                 .map(result -> {
                                     try {
-                                        return objectMapper.readValue(result, new TypeReference<LarkResponse<Customer>>() {});
+                                        JsonNode jsonNode = objectMapper.readTree(result);
+                                        String msg = jsonNode.get("msg").asText();
+                                        JsonNode itemsJsonNode = jsonNode.get("data").get("items");
+                                        List<Customer> customers = itemsJsonNode.isArray() ? objectMapper.convertValue(itemsJsonNode,
+                                                new TypeReference<>() {}) : Collections.emptyList();
+                                        if (Constants.SUCCESS_MSG.equals(msg) &&
+                                            !customers.isEmpty()
+                                        )
+                                            return customers.get(0);
+                                        throw new RuntimeException("getTargetStoreInfo execute error");
                                     } catch (JsonProcessingException e) {
                                         throw new RuntimeException(e);
                                     }
