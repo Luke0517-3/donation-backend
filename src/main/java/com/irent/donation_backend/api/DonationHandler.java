@@ -30,6 +30,22 @@ public class DonationHandler {
                 .switchIfEmpty(ServerResponse.noContent().build());
     }
 
+
+    public Mono<ServerResponse> createOrder(ServerRequest request) {
+        return request.bodyToMono(NGOOrderFields.class)
+                .flatMap(donationService::test)
+                .flatMap(result ->
+                        ServerResponse.ok()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(Mono.just(Map.of("result", result)), Map.class)
+                )
+                .switchIfEmpty(ServerResponse.noContent().build())
+                .onErrorResume(ex ->
+                        ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(Mono.just(Map.of("error", ex.getMessage())), Map.class)
+                );
+    }
+
     public Mono<ServerResponse> test(ServerRequest request) {
         return request.bodyToMono(NGOOrderFields.class)
                 .flatMap(donationService::test)

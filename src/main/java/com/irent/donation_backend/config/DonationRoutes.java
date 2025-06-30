@@ -2,7 +2,6 @@ package com.irent.donation_backend.config;
 
 import com.irent.donation_backend.api.DonationHandler;
 import com.irent.donation_backend.model.Customer;
-import com.irent.donation_backend.model.LarkResponse;
 import com.irent.donation_backend.model.NGOOrderFields;
 import com.irent.donation_backend.service.DonationService;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -27,6 +26,7 @@ public class DonationRoutes {
 
     private static final String MAIN_REQUEST_MAPPING = "/api/donation";
     private static final String GET_CUSTOMER_MAPPING = "/customer/{name}";
+    private static final String POST_ORDER_MAPPING = "/create/order";
     private static final String TEST = "/test";
 
     @Bean
@@ -37,7 +37,8 @@ public class DonationRoutes {
     @Bean
     public RouterFunction<ServerResponse> donationRouterFunctionSwagger(final DonationHandler handler) {
         return getCustomerFunctionSwagger(handler)
-                .and(test(handler));
+                .and(createOrderFunctionSwagger(handler));
+//                .and(test(handler));
     }
 
     protected RouterFunction<ServerResponse> getCustomerFunctionSwagger(final DonationHandler handler) {
@@ -63,6 +64,28 @@ public class DonationRoutes {
         };
         return SpringdocRouteBuilder.route().path(MAIN_REQUEST_MAPPING,
                 builder -> builder.GET(GET_CUSTOMER_MAPPING, handler::getCustomer), result).build();
+    }
+
+    protected RouterFunction<ServerResponse> createOrderFunctionSwagger(final DonationHandler handler) {
+        final Consumer<Builder> result = ops -> {
+            ops.beanClass(DonationHandler.class)
+                    .beanMethod("createOrder")
+                    .operationId("Create Order For Donation")
+                    .summary("建立捐款訂單")
+                    .description("建立捐款訂單")
+                    .requestBody(requestBodyBuilder()  // 添加請求體文檔
+                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE)
+                                    .schema(schemaBuilder().implementation(NGOOrderFields.class)))
+                            .required(true))
+                    .response(responseBuilder()
+                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(String.class)))
+                            .responseCode("200")
+                            .description("successful operation")
+                    );
+            commonProcess(ops);
+        };
+        return SpringdocRouteBuilder.route().path(MAIN_REQUEST_MAPPING,
+                builder -> builder.POST(POST_ORDER_MAPPING, handler::createOrder), result).build();
     }
 
     protected RouterFunction<ServerResponse> test(final DonationHandler handler) {
