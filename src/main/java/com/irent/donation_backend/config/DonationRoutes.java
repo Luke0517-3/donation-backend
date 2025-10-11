@@ -36,7 +36,7 @@ public class DonationRoutes {
         public static final String CUSTOMER = "/customer/{name}";
         public static final String ORDER = "/create/order";
         public static final String NEWEBPAY = "/newebpay/retrieve";
-        public static final String TEST = "/test";
+        public static final String TEST = "/test/{recordId}";
         public static final String NEWEBPAY_NOTIFY = "/newebpay/notify";
     }
 
@@ -56,9 +56,9 @@ public class DonationRoutes {
         return customerRoute(handler)
                 .and(orderRoute(handler))
                 .and(newebPayRoute(handler))
-                .and(newebPayNotifyRoute(handler));
+                .and(newebPayNotifyRoute(handler))
         // 如需啟用測試路由，請取消下面註解
-        // .and(testRoute(handler));
+         .and(testRoute(handler));
     }
 
     /**
@@ -123,7 +123,13 @@ public class DonationRoutes {
                 builder -> builder.POST(ApiPaths.TEST, handler::test),
                 createSwaggerDocs("test", "For test",
                         "測試用", "測試用",
-                        NGOOrderFields.class, String.class)
+                        null, String.class)
+                        .andThen(ops -> ops.parameter(parameterBuilder()
+                                .name("recordId")
+                                .in(ParameterIn.PATH)
+                                .required(true)
+                                .description("記錄 ID")
+                                .schema(schemaBuilder().type("string"))))
         ).build();
     }
 

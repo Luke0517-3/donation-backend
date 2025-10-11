@@ -15,5 +15,7 @@ public interface LarkService {
     Mono<Customer> getTargetStoreInfo(String path);
 
     Mono<OrderInfoDTO> createDonationOrder(NGOOrderFields orderFields);
+
+    Mono<String> updateDonationOrder(String recordId, Integer payStatus);
 }
 

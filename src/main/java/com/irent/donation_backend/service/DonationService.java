@@ -10,4 +10,6 @@ public interface DonationService {
     Mono<NGOEnvItem> queryStoreInfo(String name);
 
     Mono<OrderInfoDTO> createOrder(NGOOrderFields orderFields);
+
+    Mono<String> updateOrder(String recordId, Integer payStatus);
 }

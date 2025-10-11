@@ -92,11 +92,11 @@ public class DonationHandler {
     }
 
     public Mono<ServerResponse> test(ServerRequest request) {
-        return request.bodyToMono(NGOOrderFields.class)
-                .doOnNext(order -> log.info("測試方法: {}", order))
-                .flatMap(donationService::createOrder)
-                .flatMap(result -> createSuccessResponse("test", result))
+        return Mono.just(request.pathVariable("recordId"))
+                .doOnNext(recordId -> log.info("測試更新訂單: {}", recordId))
+                .flatMap(recordId -> donationService.updateOrder(recordId, 1))
+                .flatMap(fields -> createSuccessResponse("queryStoreInfo", fields))
                 .switchIfEmpty(ServerResponse.noContent().build())
-                .onErrorResume(ex -> handleError("test", ex));
+                .onErrorResume(ex -> handleError("queryStoreInfo", ex));
     }
 }

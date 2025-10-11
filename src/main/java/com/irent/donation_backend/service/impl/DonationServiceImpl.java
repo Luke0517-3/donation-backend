@@ -26,4 +26,9 @@ public class DonationServiceImpl implements DonationService {
     public Mono<OrderInfoDTO> createOrder(NGOOrderFields orderFields) {
         return larkService.createDonationOrder(orderFields);
     }
+
+    @Override
+    public Mono<String> updateOrder(String recordId, Integer payStatus) {
+        return larkService.updateDonationOrder(recordId, payStatus);
+    }
 }

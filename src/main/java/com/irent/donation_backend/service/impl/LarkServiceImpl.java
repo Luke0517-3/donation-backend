@@ -1,6 +1,5 @@
 package com.irent.donation_backend.service.impl;
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.irent.donation_backend.common.Constants;
@@ -22,7 +21,6 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
 @Service
@@ -30,6 +28,7 @@ import java.util.function.Function;
 public class LarkServiceImpl implements LarkService {
 
     private static final String APP_TOKEN_PATH = "/{app_token}/tables/{table_id}/records";
+    private static final String RECORD_PATH = "/{app_token}/tables/{table_id}/records/{record_id}";
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final LarkProperties larkProperties;
@@ -65,16 +64,19 @@ public class LarkServiceImpl implements LarkService {
 
     @Override
     public Mono<Customer> getTargetStoreInfo(String path) {
-        Map<String, Object> requestBody = createDynamicRequestBody("PATH", "is", List.of(path));
+        Map<String, Object> requestBody = Map.of(
+                "filter", Map.of(
+                        "conditions", List.of(Map.of("field_name", "PATH", "operator", "is", "value", List.of(path))),
+                        "conjunction", "and"
+                )
+        );
+
         return executeRequest(
                 APP_TOKEN_PATH + "/search",
                 HttpMethod.POST,
                 requestBody,
                 jsonNode -> {
-                    String msg = jsonNode.get("msg").asText();
-                    if (!Constants.SUCCESS_MSG.equals(msg)) {
-                        throw new RuntimeException("API returned error: " + msg);
-                    }
+                    validateApiResponse(jsonNode, "API returned error");
                     JsonNode itemsNode = jsonNode.get("data").get("items");
                     List<Customer> customers = itemsNode.isArray()
                             ? jsonUtils.convertNodeToType(itemsNode, new TypeReference<>() {
@@ -97,18 +99,11 @@ public class LarkServiceImpl implements LarkService {
                 HttpMethod.POST,
                 requestBody,
                 jsonNode -> {
-                    String msg = jsonNode.get("msg").asText();
-
-                    // 檢查訂單創建是否成功
-                    if (!Constants.SUCCESS_MSG.equals(msg)) {
-                        throw new RuntimeException("訂單建立失敗: " + msg + " orderFields: " + orderFields);
-                    }
+                    validateApiResponse(jsonNode, "訂單建立失敗", orderFields);
+                    JsonNode recordNode = jsonNode.get("data").get("record");
 
                     return OrderInfoDTO.builder()
-                            .orderId(jsonNode.get("data")
-                                    .get("record")
-                                    .get("record_id")
-                                    .asText())
+                            .orderId(recordNode.get("record_id").asText())
                             .amount(orderFields.getAmount())
                             .itemDesc("愛心捐款")
                             .email(orderFields.getEmail())
@@ -117,10 +112,29 @@ public class LarkServiceImpl implements LarkService {
         );
     }
 
-    private String generateOrderId() {
-        return NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR,
-                NanoIdUtils.DEFAULT_ALPHABET,
-                15) + "_" + System.currentTimeMillis() / 1000;
+    @Override
+    public Mono<String> updateDonationOrder(String recordId, Integer payStatus) {
+        Map<String, Object> requestBody = Map.of("fields", Map.of("PAY_STATUS", payStatus));
+
+        return executeRequest(
+                RECORD_PATH,
+                HttpMethod.PUT,
+                requestBody,
+                jsonNode -> {
+                    validateApiResponse(jsonNode, "訂單更新失敗", "recordId: " + recordId);
+                    return Constants.SUCCESS;
+                },
+                larkProperties.getORDER_TABLE_ID(),
+                recordId
+        );
+    }
+
+    private void validateApiResponse(JsonNode jsonNode, String errorMessage, Object... details) {
+        String msg = jsonNode.get("msg").asText();
+        if (!Constants.SUCCESS_MSG.equals(msg)) {
+            throw new RuntimeException(errorMessage + ": " + msg +
+                    (details.length > 0 ? " " + details[0] : ""));
+        }
     }
 
     private <T> T handleJsonResponse(String response, Function<JsonNode, T> processor) {
@@ -128,24 +142,20 @@ public class LarkServiceImpl implements LarkService {
     }
 
     private <T> Mono<T> executeRequest(
-            String path,
+            String pathTemplate,
             HttpMethod method,
             Object body,
-            Function<JsonNode, T> responseProcessor
+            Function<JsonNode, T> responseProcessor,
+            String tableId,
+            Object... additionalPathVariables
     ) {
         return getTenantAccessToken()
                 .flatMap(token -> {
+                    Object[] pathVars = buildPathVariables(tableId, additionalPathVariables);
+
                     WebClient.RequestBodySpec request = bitableWebClient
                             .method(method)
-                            .uri(uriBuilder -> uriBuilder
-                                    .path(path)
-                                    .build(
-                                            larkProperties.getAPP_TOKEN(),
-                                            method == HttpMethod.POST && body instanceof Map<?, ?> bodyMap
-                                                    && bodyMap.containsKey("fields")
-                                                    ? larkProperties.getORDER_TABLE_ID()
-                                                    : larkProperties.getTABLE_ID()
-                                    ))
+                            .uri(uriBuilder -> uriBuilder.path(pathTemplate).build(pathVars))
                             .header("Authorization", BEARER_PREFIX + token);
 
                     if (body != null) {
@@ -159,29 +169,35 @@ public class LarkServiceImpl implements LarkService {
                 });
     }
 
+    private Object[] buildPathVariables(String tableId, Object... additionalPathVariables) {
+        int extraLength = additionalPathVariables != null ? additionalPathVariables.length : 0;
+        Object[] pathVars = new Object[2 + extraLength];
+        pathVars[0] = larkProperties.getAPP_TOKEN();
+        pathVars[1] = tableId;
+
+        if (extraLength > 0) {
+            System.arraycopy(additionalPathVariables, 0, pathVars, 2, extraLength);
+        }
+
+        return pathVars;
+    }
+
+    private <T> Mono<T> executeRequest(
+            String path,
+            HttpMethod method,
+            Object body,
+            Function<JsonNode, T> responseProcessor
+    ) {
+        String tableId = method == HttpMethod.POST && body instanceof Map<?, ?> bodyMap
+                && bodyMap.containsKey("fields")
+                ? larkProperties.getORDER_TABLE_ID()
+                : larkProperties.getTABLE_ID();
+
+        return executeRequest(path, method, body, responseProcessor, tableId);
+    }
+
     private List<NGOEnvListItem> parseItemsFromJson(String jsonString) {
         return jsonUtils.parseJson(jsonString, new TypeReference<>() {
         });
-    }
-
-    private Map<String, Object> createDynamicRequestBody(
-            String fieldName,
-            String operator,
-            List<String> values
-    ) {
-        Objects.requireNonNull(fieldName, "fieldName cannot be null");
-        Objects.requireNonNull(operator, "operator cannot be null");
-        Objects.requireNonNull(values, "values cannot be null");
-
-        return Map.of("filter", Map.of(
-                "conditions", List.of(
-                        Map.of(
-                                "field_name", fieldName,
-                                "operator", operator,
-                                "value", values
-                        )
-                ),
-                "conjunction", "and"
-        ));
     }
 }
