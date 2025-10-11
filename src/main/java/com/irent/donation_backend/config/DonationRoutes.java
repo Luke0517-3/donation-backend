@@ -35,9 +35,9 @@ public class DonationRoutes {
         public static final String BASE = "/api/donation";
         public static final String CUSTOMER = "/customer/{name}";
         public static final String ORDER = "/create/order";
-        public static final String NEWEBPAY = "/retrieve/newebpay";
+        public static final String NEWEBPAY = "/newebpay/retrieve";
         public static final String TEST = "/test";
-        public static final String NEWEBPAY_NOTIFY = "/newebpay/notify/{sysId}/{apiId}";
+        public static final String NEWEBPAY_NOTIFY = "/newebpay/notify";
     }
 
     /**
@@ -109,7 +109,7 @@ public class DonationRoutes {
     protected RouterFunction<ServerResponse> newebPayNotifyRoute(final DonationHandler handler) {
         return SpringdocRouteBuilder.route().path(ApiPaths.BASE,
                 builder -> builder.POST(ApiPaths.NEWEBPAY_NOTIFY, handler::handleNewebPayNotify),
-                createSwaggerDocs("newebPayNotify", "NewebPay Notification Handler",
+                createSwaggerDocs("handleNewebPayNotify", "NewebPay Notification Handler",
                         "處理藍新支付通知", "接收並處理藍新支付結果通知",
                         NewebPayNotifyReqDTO.class, String.class)
         ).build();

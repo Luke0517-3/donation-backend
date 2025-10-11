@@ -89,8 +89,7 @@ public class LarkServiceImpl implements LarkService {
 
     @Override
     public Mono<OrderInfoDTO> createDonationOrder(NGOOrderFields orderFields) {
-        String orderId = generateOrderId();
-        orderFields.setOrderId(orderId);
+        orderFields.setPayStatus(0);
         Map<String, Object> requestBody = Map.of("fields", orderFields);
 
         return executeRequest(
@@ -106,8 +105,11 @@ public class LarkServiceImpl implements LarkService {
                     }
 
                     return OrderInfoDTO.builder()
-                            .orderId(orderId)
-                            .amount(Integer.valueOf(orderFields.getAmount()))
+                            .orderId(jsonNode.get("data")
+                                    .get("record")
+                                    .get("record_id")
+                                    .asText())
+                            .amount(orderFields.getAmount())
                             .itemDesc("愛心捐款")
                             .email(orderFields.getEmail())
                             .build();

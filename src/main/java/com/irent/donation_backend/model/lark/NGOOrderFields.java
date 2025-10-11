@@ -58,10 +58,10 @@ public class NGOOrderFields {
     @JsonAlias({"PAY_STATUS", "payStatus"})
     @JsonProperty("PAY_STATUS")
     @Schema(description = "付款狀態： 0-未付款、1-已付款、2-付款失敗")
-    private String payStatus;
+    private Integer payStatus;
 
     @JsonAlias({"AMOUNT", "amount"})
     @JsonProperty("AMOUNT")
     @Schema(description = "捐款金額")
-    private String amount;
+    private Integer amount;
 }
