@@ -1,4 +1,4 @@
-package com.irent.donation_backend.model;
+package com.irent.donation_backend.model.utils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -9,14 +9,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
 /**
- * ClassName:ComBodyDTO
+ * ClassName:AAA
  * Package:com.iisigroup.ocapi.dto
  * Description:
  *
- * @Date:2024/3/19 上午 09:45
+ * @Date:2024/3/19 上午 09:50
  * @Author:2208021
  */
 @Data
@@ -27,9 +25,10 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReqBodyDTO<T> {
 
-    private Map<String, Object> header;
+    private String type;
 
     @Valid
-    @NotNull(message = "RequestBodySkeleton is required")
-    private RequestBodySkeleton<T> body;
+    @NotNull(message = "data is required")
+    private T data;
+
 }

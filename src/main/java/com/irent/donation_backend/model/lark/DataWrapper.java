@@ -1,4 +1,4 @@
-package com.irent.donation_backend.model;
+package com.irent.donation_backend.model.lark;
 
 import lombok.Data;
 

@@ -1,8 +1,8 @@
 package com.irent.donation_backend.service;
 
-import com.irent.donation_backend.model.Customer;
-import com.irent.donation_backend.model.NGOEnvListItem;
-import com.irent.donation_backend.model.NGOOrderFields;
+import com.irent.donation_backend.model.lark.Customer;
+import com.irent.donation_backend.model.lark.NGOEnvListItem;
+import com.irent.donation_backend.model.lark.NGOOrderFields;
 import reactor.core.publisher.Mono;
 
 import java.util.List;

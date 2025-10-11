@@ -22,4 +22,5 @@ public class NewebPayProperties {
     private String NOTIFY_URL;
     private String PAYMENT_URL;
     private String CLIENT_BACK;
+    private String VERSION;
 }

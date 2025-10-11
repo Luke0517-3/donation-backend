@@ -1,4 +1,4 @@
-package com.irent.donation_backend.model;
+package com.irent.donation_backend.model.lark;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

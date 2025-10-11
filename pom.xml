@@ -92,9 +92,9 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
-					<compilerArgs>
-						<arg>--enable-preview</arg>
-					</compilerArgs>
+<!--					<compilerArgs>-->
+<!--						<arg>&#45;&#45;enable-preview</arg>-->
+<!--					</compilerArgs>-->
 				</configuration>
 			</plugin>
 		</plugins>

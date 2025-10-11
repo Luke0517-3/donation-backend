@@ -1,13 +1,13 @@
 package com.irent.donation_backend.common;
 
-import com.irent.donation_backend.model.RespBodyDTO;
+import com.irent.donation_backend.model.utils.RespBodyDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import static com.irent.donation_backend.model.RespBodyDTO.getErrRespBodyDTO;
+import static com.irent.donation_backend.model.utils.RespBodyDTO.getErrRespBodyDTO;
 
 @RestControllerAdvice
 @Slf4j

@@ -1,4 +1,4 @@
-package com.irent.donation_backend.model;
+package com.irent.donation_backend.model.lark;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,26 +7,23 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "多維表格-查詢記錄")
-public class NGOEnvItem {
+@Schema(description = "捐款目標資訊")
+public class NGOEnvFields {
     @JsonAlias("PATH")
     @Schema(description = "請求查詢路徑")
-    private List<MultilineText> path;
+    private String path;
 
     @JsonAlias("STORE_KEY")
     @Schema(description = "商店Key")
-    private List<MultilineText> storeKey;
+    private String storeKey;
 
     @JsonAlias("STORE_NAME")
     @Schema(description = "商店名稱")
-    private List<MultilineText> storeName;
+    private String storeName;
 
     @JsonAlias("STORE_VALUE")
     @Schema(description = "商店Value")
@@ -42,9 +39,9 @@ public class NGOEnvItem {
 
     @JsonAlias("DEFAULT_MONTH")
     @Schema(description = "預設月數")
-    private Integer defaultMonths;
+    private String defaultMonths;
 
     @JsonAlias("DEFAULT_AMOUNT")
     @Schema(description = "預設金額")
-    private BigDecimal defaultAmount;
+    private String defaultAmount;
 }

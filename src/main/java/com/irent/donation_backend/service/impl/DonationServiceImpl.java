@@ -1,7 +1,9 @@
 package com.irent.donation_backend.service.impl;
 
 import com.irent.donation_backend.common.Constants;
-import com.irent.donation_backend.model.*;
+import com.irent.donation_backend.model.lark.Customer;
+import com.irent.donation_backend.model.lark.NGOEnvItem;
+import com.irent.donation_backend.model.lark.NGOOrderFields;
 import com.irent.donation_backend.service.DonationService;
 import com.irent.donation_backend.service.LarkService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,7 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
-    public Mono<String> test(NGOOrderFields orderFields) {
+    public Mono<String> createOrder(NGOOrderFields orderFields) {
         return larkService.createDonationOrder(orderFields)
                 .map(result -> switch(result) {
             case Constants.SUCCESS_MSG -> result;
