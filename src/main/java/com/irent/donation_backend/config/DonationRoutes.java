@@ -27,116 +27,133 @@ import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 @Configuration
 public class DonationRoutes {
 
-    private static final String MAIN_REQUEST_MAPPING = "/api/donation";
-    private static final String GET_CUSTOMER_MAPPING = "/customer/{name}";
-    private static final String POST_ORDER_MAPPING = "/create/order";
-    private static final String POST_RETRIEVE_NEWEBPAY_MAPPING = "/retrieve/newebpay";
-    private static final String TEST = "/test";
+    /**
+     * API 路徑常數
+     */
+    public static class ApiPaths {
+        public static final String BASE = "/api/donation";
+        public static final String CUSTOMER = "/customer/{name}";
+        public static final String ORDER = "/create/order";
+        public static final String NEWEBPAY = "/retrieve/newebpay";
+        public static final String TEST = "/test";
+    }
 
+    /**
+     * 註冊 DonationHandler Bean
+     */
     @Bean
     public DonationHandler donationHandler(DonationService donationService, NewebPayService newebPayService) {
         return new DonationHandler(donationService, newebPayService);
     }
 
+    /**
+     * 註冊所有捐款相關路由
+     */
     @Bean
-    public RouterFunction<ServerResponse> donationRouterFunctionSwagger(final DonationHandler handler) {
-        return getCustomerFunctionSwagger(handler)
-                .and(createOrderFunctionSwagger(handler))
-                .and(retrieveNewebPayRequestFunctionSwagger(handler));
-//                .and(test(handler));
+    public RouterFunction<ServerResponse> donationRouterFunction(final DonationHandler handler) {
+        return customerRoute(handler)
+                .and(orderRoute(handler))
+                .and(newebPayRoute(handler));
+        // 如需啟用測試路由，請取消下面註解
+        // .and(testRoute(handler));
     }
 
-    protected RouterFunction<ServerResponse> getCustomerFunctionSwagger(final DonationHandler handler) {
-        final Consumer<Builder> result = ops -> {
+    /**
+     * 取得捐款目標機構資訊路由
+     */
+    protected RouterFunction<ServerResponse> customerRoute(final DonationHandler handler) {
+        return SpringdocRouteBuilder.route().path(ApiPaths.BASE,
+                builder -> builder.GET(ApiPaths.CUSTOMER, handler::getCustomer),
+                createSwaggerDocs("getCustomer", "Get Customer Info",
+                        "取得捐款目標機構資訊", "取得捐款目標機構資訊",
+                        null, Customer.class)
+                        .andThen(ops -> ops.parameter(parameterBuilder()
+                                .name("name")
+                                .in(ParameterIn.PATH)
+                                .required(true)
+                                .description("客戶名稱")
+                                .schema(schemaBuilder().type("string"))))
+        ).build();
+    }
+
+    /**
+     * 建立捐款訂單路由
+     */
+    protected RouterFunction<ServerResponse> orderRoute(final DonationHandler handler) {
+        return SpringdocRouteBuilder.route().path(ApiPaths.BASE,
+                builder -> builder.POST(ApiPaths.ORDER, handler::createOrder),
+                createSwaggerDocs("createOrder", "Create Order For Donation",
+                        "建立捐款訂單", "建立捐款訂單",
+                        NGOOrderFields.class, String.class)
+        ).build();
+    }
+
+    /**
+     * 藍星支付請求路由
+     */
+    protected RouterFunction<ServerResponse> newebPayRoute(final DonationHandler handler) {
+        return SpringdocRouteBuilder.route().path(ApiPaths.BASE,
+                builder -> builder.POST(ApiPaths.NEWEBPAY, handler::retrieveNewebPayRequest),
+                createSwaggerDocs("retrieveNewebPayRequest", "Retrieve NewebPay Request",
+                        "取得藍星支付請求資訊", "取得藍星支付請求資訊",
+                        OrderInfoDTO.class, NewebPayReqDTO.class)
+        ).build();
+    }
+
+    /**
+     * 測試用路由
+     */
+    protected RouterFunction<ServerResponse> testRoute(final DonationHandler handler) {
+        return SpringdocRouteBuilder.route().path(ApiPaths.BASE,
+                builder -> builder.POST(ApiPaths.TEST, handler::test),
+                createSwaggerDocs("test", "For test",
+                        "測試用", "測試用",
+                        NGOOrderFields.class, String.class)
+        ).build();
+    }
+
+    /**
+     * 建立 Swagger 文檔設定
+     *
+     * @param methodName   處理方法名稱
+     * @param operationId  操作 ID
+     * @param summary      摘要
+     * @param description  描述
+     * @param requestType  請求體類型，如不需要可傳 null
+     * @param responseType 回應類型
+     * @return Swagger 配置
+     */
+    private <T, R> Consumer<Builder> createSwaggerDocs(
+            String methodName, String operationId, String summary, String description,
+            Class<T> requestType, Class<R> responseType) {
+
+        return ops -> {
             ops.beanClass(DonationHandler.class)
-                    .beanMethod("getCustomer")
-                    .operationId("Get Customer Info")
-                    .summary("取得捐款目標機構資訊")
-                    .description("取得捐款目標機構資訊")
-                    .parameter(parameterBuilder()
-                            .name("name")
-                            .in(ParameterIn.PATH)
-                            .required(true)
-                            .description("Customer name")
-                            .schema(schemaBuilder().type("string"))
-                    )
-                    .response(responseBuilder()
-                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(Customer.class)))
-                            .responseCode("200")
-                            .description("successful operation")
-                    );
+                    .beanMethod(methodName)
+                    .operationId(operationId)
+                    .summary(summary)
+                    .description(description);
+
+            if (requestType != null) {
+                ops.requestBody(requestBodyBuilder()
+                        .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE)
+                                .schema(schemaBuilder().implementation(requestType)))
+                        .required(true));
+            }
+
+            ops.response(responseBuilder()
+                    .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE)
+                            .schema(schemaBuilder().implementation(responseType)))
+                    .responseCode("200")
+                    .description("successful operation"));
+
             commonProcess(ops);
         };
-        return SpringdocRouteBuilder.route().path(MAIN_REQUEST_MAPPING,
-                builder -> builder.GET(GET_CUSTOMER_MAPPING, handler::getCustomer), result).build();
     }
 
-    protected RouterFunction<ServerResponse> createOrderFunctionSwagger(final DonationHandler handler) {
-        final Consumer<Builder> result = ops -> {
-            ops.beanClass(DonationHandler.class)
-                    .beanMethod("createOrder")
-                    .operationId("Create Order For Donation")
-                    .summary("建立捐款訂單")
-                    .description("建立捐款訂單")
-                    .requestBody(requestBodyBuilder()  // 添加請求體文檔
-                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE)
-                                    .schema(schemaBuilder().implementation(NGOOrderFields.class)))
-                            .required(true))
-                    .response(responseBuilder()
-                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(String.class)))
-                            .responseCode("200")
-                            .description("successful operation")
-                    );
-            commonProcess(ops);
-        };
-        return SpringdocRouteBuilder.route().path(MAIN_REQUEST_MAPPING,
-                builder -> builder.POST(POST_ORDER_MAPPING, handler::createOrder), result).build();
-    }
-
-    protected RouterFunction<ServerResponse> retrieveNewebPayRequestFunctionSwagger(final DonationHandler handler) {
-        final Consumer<Builder> result = ops -> {
-            ops.beanClass(DonationHandler.class)
-                    .beanMethod("retrieveNewebPayRequest")
-                    .operationId("Retrieve NewebPay Request")
-                    .summary("取得藍星支付請求資訊")
-                    .description("取得藍星支付請求資訊")
-                    .requestBody(requestBodyBuilder()
-                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE)
-                                    .schema(schemaBuilder().implementation(OrderInfoDTO.class)))
-                            .required(true))
-                    .response(responseBuilder()
-                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(NewebPayReqDTO.class)))
-                            .responseCode("200")
-                            .description("successful operation")
-                    );
-            commonProcess(ops);
-        };
-        return SpringdocRouteBuilder.route().path(MAIN_REQUEST_MAPPING,
-                builder -> builder.POST(POST_RETRIEVE_NEWEBPAY_MAPPING, handler::retrieveNewebPayRequest), result).build();
-    }
-
-    protected RouterFunction<ServerResponse> test(final DonationHandler handler) {
-        final Consumer<Builder> result = ops -> {
-            ops.beanClass(DonationHandler.class)
-                    .beanMethod("test")
-                    .operationId("For test")
-                    .summary("測試用")
-                    .description("測試用")
-                    .requestBody(requestBodyBuilder()  // 添加請求體文檔
-                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE)
-                                    .schema(schemaBuilder().implementation(NGOOrderFields.class)))
-                            .required(true))
-                    .response(responseBuilder()
-                            .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE).schema(schemaBuilder().implementation(String.class)))
-                            .responseCode("200")
-                            .description("successful operation")
-                    );
-            commonProcess(ops);
-        };
-        return SpringdocRouteBuilder.route().path(MAIN_REQUEST_MAPPING,
-                builder -> builder.POST(TEST, handler::test), result).build();
-    }
-
+    /**
+     * 添加通用回應代碼
+     */
     protected void commonProcess(final Builder builder) {
         builder.response(responseBuilder().responseCode("400").description("Bad Request"))
                 .response(responseBuilder().responseCode("401").description("Unauthorized"))
