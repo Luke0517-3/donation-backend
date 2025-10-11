@@ -11,6 +11,8 @@ import com.irent.donation_backend.model.newebpay.OrderInfoDTO;
 import com.irent.donation_backend.service.LarkService;
 import com.irent.donation_backend.utils.JsonUtils;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -21,6 +23,7 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 @Service
@@ -30,6 +33,7 @@ public class LarkServiceImpl implements LarkService {
     private static final String APP_TOKEN_PATH = "/{app_token}/tables/{table_id}/records";
     private static final String RECORD_PATH = "/{app_token}/tables/{table_id}/records/{record_id}";
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final Logger log = LoggerFactory.getLogger(LarkServiceImpl.class);
 
     private final LarkProperties larkProperties;
     private final JsonUtils jsonUtils;
@@ -101,14 +105,15 @@ public class LarkServiceImpl implements LarkService {
                 jsonNode -> {
                     validateApiResponse(jsonNode, "訂單建立失敗", orderFields);
                     JsonNode recordNode = jsonNode.get("data").get("record");
-
-                    return OrderInfoDTO.builder()
-                            .orderId(recordNode.get("record_id").asText())
-                            .amount(orderFields.getAmount())
-                            .itemDesc("愛心捐款")
-                            .email(orderFields.getEmail())
-                            .build();
+                    return recordNode.get("record_id").asText();
                 }
+        ).flatMap(recordId -> setOrderId(recordId)
+                .thenReturn(OrderInfoDTO.builder()
+                        .orderId(recordId)
+                        .amount(orderFields.getAmount())
+                        .itemDesc("愛心捐款")
+                        .email(orderFields.getEmail())
+                        .build())
         );
     }
 
@@ -129,9 +134,56 @@ public class LarkServiceImpl implements LarkService {
         );
     }
 
+    private Mono<String> setOrderId(String recordId) {
+        Map<String, Object> requestBody = Map.of("fields", Map.of("ORDER_ID", recordId));
+
+        return executeRequest(
+                RECORD_PATH,
+                HttpMethod.PUT,
+                requestBody,
+                jsonNode -> {
+                    validateApiResponse(jsonNode, "訂單更新失敗", "recordId: " + recordId);
+                    return Constants.SUCCESS;
+                },
+                larkProperties.getORDER_TABLE_ID(),
+                recordId
+        );
+    }
+
+    @Override
+    public Mono<Object> queryOrderInfo(String recordId) {
+        Map<String, Object> requestBody = Map.of(
+                "filter", Map.of(
+                        "conditions", List.of(Map.of("field_name", "ORDER_ID", "operator", "is", "value", List.of(recordId))),
+                        "conjunction", "and"
+                )
+        );
+
+        return executeRequest(
+                APP_TOKEN_PATH + "/search",
+                HttpMethod.POST,
+                requestBody,
+                jsonNode -> {
+                    validateApiResponse(jsonNode, "訂單查詢失敗", "recordId: " + recordId);
+                    JsonNode itemsNode = jsonNode.get("data").get("items");
+                    List<Object> res = itemsNode.isArray()
+                            ? jsonUtils.convertNodeToType(itemsNode, new TypeReference<>() {
+                    })
+                            : Collections.emptyList();
+                    return res.stream()
+                            .findFirst()
+                            .orElseThrow(() -> new RuntimeException("No customer found"));
+                },
+                larkProperties.getORDER_TABLE_ID(),
+                recordId
+        );
+    }
+
     private void validateApiResponse(JsonNode jsonNode, String errorMessage, Object... details) {
         String msg = jsonNode.get("msg").asText();
         if (!Constants.SUCCESS_MSG.equals(msg)) {
+            log.error("Response indicates failure: {}", Optional.ofNullable(jsonUtils.convertNodeToType(jsonNode, new TypeReference<>() {
+            })));
             throw new RuntimeException(errorMessage + ": " + msg +
                     (details.length > 0 ? " " + details[0] : ""));
         }

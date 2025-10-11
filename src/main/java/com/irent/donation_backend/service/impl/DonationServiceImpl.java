@@ -31,4 +31,11 @@ public class DonationServiceImpl implements DonationService {
     public Mono<String> updateOrder(String recordId, Integer payStatus) {
         return larkService.updateDonationOrder(recordId, payStatus);
     }
+
+    @Override
+    public Mono<Object> queryOrderInfo(String recordId) {
+        return larkService.queryOrderInfo(recordId);
+    }
+
+
 }

@@ -123,7 +123,7 @@ public class DonationRoutes {
                 builder -> builder.POST(ApiPaths.TEST, handler::test),
                 createSwaggerDocs("test", "For test",
                         "測試用", "測試用",
-                        null, String.class)
+                        null, Object.class)
                         .andThen(ops -> ops.parameter(parameterBuilder()
                                 .name("recordId")
                                 .in(ParameterIn.PATH)

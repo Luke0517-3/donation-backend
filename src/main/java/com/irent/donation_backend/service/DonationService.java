@@ -12,4 +12,6 @@ public interface DonationService {
     Mono<OrderInfoDTO> createOrder(NGOOrderFields orderFields);
 
     Mono<String> updateOrder(String recordId, Integer payStatus);
+
+    Mono<Object> queryOrderInfo(String recordId);
 }

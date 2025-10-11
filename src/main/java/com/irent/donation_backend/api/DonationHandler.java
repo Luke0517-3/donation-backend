@@ -94,7 +94,7 @@ public class DonationHandler {
     public Mono<ServerResponse> test(ServerRequest request) {
         return Mono.just(request.pathVariable("recordId"))
                 .doOnNext(recordId -> log.info("測試更新訂單: {}", recordId))
-                .flatMap(recordId -> donationService.updateOrder(recordId, 1))
+                .flatMap(recordId -> donationService.queryOrderInfo(recordId))
                 .flatMap(fields -> createSuccessResponse("queryStoreInfo", fields))
                 .switchIfEmpty(ServerResponse.noContent().build())
                 .onErrorResume(ex -> handleError("queryStoreInfo", ex));
