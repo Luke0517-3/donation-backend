@@ -49,4 +49,19 @@ public class NGOOrderFields {
     @JsonProperty("MESSAGE")
     @Schema(description = "想說的話")
     private String message;
+
+    @JsonAlias({"ORDER_ID", "orderId"})
+    @JsonProperty("ORDER_ID")
+    @Schema(description = "訂單編號")
+    private String orderId;
+
+    @JsonAlias({"PAY_STATUS", "payStatus"})
+    @JsonProperty("PAY_STATUS")
+    @Schema(description = "付款狀態： 0-未付款、1-已付款、2-付款失敗")
+    private String payStatus;
+
+    @JsonAlias({"AMOUNT", "amount"})
+    @JsonProperty("AMOUNT")
+    @Schema(description = "捐款金額")
+    private String amount;
 }

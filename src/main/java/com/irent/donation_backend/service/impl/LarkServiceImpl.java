@@ -1,15 +1,16 @@
 package com.irent.donation_backend.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.irent.donation_backend.common.Constants;
 import com.irent.donation_backend.config.LarkProperties;
 import com.irent.donation_backend.model.lark.Customer;
 import com.irent.donation_backend.model.lark.NGOEnvListItem;
 import com.irent.donation_backend.model.lark.NGOOrderFields;
+import com.irent.donation_backend.model.newebpay.OrderInfoDTO;
 import com.irent.donation_backend.service.LarkService;
+import com.irent.donation_backend.utils.JsonUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpMethod;
@@ -32,7 +33,7 @@ public class LarkServiceImpl implements LarkService {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final LarkProperties larkProperties;
-    private final ObjectMapper objectMapper;
+    private final JsonUtils jsonUtils;
     @Qualifier("authWebClient")
     private final WebClient authWebClient;
     @Qualifier("bitableWebClient")
@@ -76,7 +77,7 @@ public class LarkServiceImpl implements LarkService {
                     }
                     JsonNode itemsNode = jsonNode.get("data").get("items");
                     List<Customer> customers = itemsNode.isArray()
-                            ? objectMapper.convertValue(itemsNode, new TypeReference<>() {
+                            ? jsonUtils.convertNodeToType(itemsNode, new TypeReference<>() {
                     })
                             : Collections.emptyList();
                     return customers.stream()
@@ -87,23 +88,41 @@ public class LarkServiceImpl implements LarkService {
     }
 
     @Override
-    public Mono<String> createDonationOrder(NGOOrderFields orderFields) {
+    public Mono<OrderInfoDTO> createDonationOrder(NGOOrderFields orderFields) {
+        String orderId = generateOrderId();
+        orderFields.setOrderId(orderId);
         Map<String, Object> requestBody = Map.of("fields", orderFields);
+
         return executeRequest(
                 APP_TOKEN_PATH,
                 HttpMethod.POST,
                 requestBody,
-                jsonNode -> jsonNode.get("msg").asText()
+                jsonNode -> {
+                    String msg = jsonNode.get("msg").asText();
+
+                    // 檢查訂單創建是否成功
+                    if (!Constants.SUCCESS_MSG.equals(msg)) {
+                        throw new RuntimeException("訂單建立失敗: " + msg + " orderFields: " + orderFields);
+                    }
+
+                    return OrderInfoDTO.builder()
+                            .orderId(orderId)
+                            .amount(Integer.valueOf(orderFields.getAmount()))
+                            .itemDesc("愛心捐款")
+                            .email(orderFields.getEmail())
+                            .build();
+                }
         );
     }
 
+    private String generateOrderId() {
+        return NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR,
+                NanoIdUtils.DEFAULT_ALPHABET,
+                15) + "_" + System.currentTimeMillis() / 1000;
+    }
+
     private <T> T handleJsonResponse(String response, Function<JsonNode, T> processor) {
-        try {
-            JsonNode jsonNode = objectMapper.readTree(response);
-            return processor.apply(jsonNode);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to process JSON response", e);
-        }
+        return processor.apply(jsonUtils.parseJsonToNode(response));
     }
 
     private <T> Mono<T> executeRequest(
@@ -139,12 +158,8 @@ public class LarkServiceImpl implements LarkService {
     }
 
     private List<NGOEnvListItem> parseItemsFromJson(String jsonString) {
-        try {
-            return objectMapper.readValue(jsonString, new TypeReference<>() {
-            });
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error parsing JSON", e);
-        }
+        return jsonUtils.parseJson(jsonString, new TypeReference<>() {
+        });
     }
 
     private Map<String, Object> createDynamicRequestBody(

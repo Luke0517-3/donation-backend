@@ -6,4 +6,6 @@ public class Constants {
 
     public static final Integer SUCCESS_CODE = 200;
     public static final Integer FAIL_CODE = 500;
+
+    public static final String SUCCESS = "SUCCESS";
 }

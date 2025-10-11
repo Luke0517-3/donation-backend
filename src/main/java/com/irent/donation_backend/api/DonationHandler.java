@@ -1,6 +1,7 @@
 package com.irent.donation_backend.api;
 
 import com.irent.donation_backend.model.lark.NGOOrderFields;
+import com.irent.donation_backend.model.newebpay.NewebPayNotifyReqDTO;
 import com.irent.donation_backend.model.newebpay.OrderInfoDTO;
 import com.irent.donation_backend.model.utils.RespBodyDTO;
 import com.irent.donation_backend.service.DonationService;
@@ -53,12 +54,14 @@ public class DonationHandler {
 
 
     /**
-     * 建立捐款訂單
+     * 建立捐款訂單並取得藍星支付請求資訊
      */
     public Mono<ServerResponse> createOrder(ServerRequest request) {
         return request.bodyToMono(NGOOrderFields.class)
                 .doOnNext(order -> log.info("創建捐款訂單: {}", order))
                 .flatMap(donationService::createOrder)
+                .doOnNext(orderInfo -> log.info("訂單已創建完成: {}", orderInfo))
+                .flatMap(newebPayService::generateNewebPayRequest)
                 .flatMap(result -> createSuccessResponse("createOrder", result))
                 .switchIfEmpty(ServerResponse.noContent().build())
                 .onErrorResume(ex -> handleError("createOrder", ex));
@@ -71,9 +74,21 @@ public class DonationHandler {
         return request.bodyToMono(OrderInfoDTO.class)
                 .doOnNext(orderInfo -> log.info("生成支付請求: {}", orderInfo))
                 .flatMap(newebPayService::generateNewebPayRequest)
-                .flatMap(result -> createSuccessResponse("newebPayRequest", result))
+                .flatMap(result -> createSuccessResponse("retrieveNewebPayRequest", result))
                 .switchIfEmpty(ServerResponse.noContent().build())
-                .onErrorResume(ex -> handleError("newebPayRequest", ex));
+                .onErrorResume(ex -> handleError("retrieveNewebPayRequest", ex));
+    }
+
+    /**
+     * 接收藍星付款結果資訊
+     */
+    public Mono<ServerResponse> handleNewebPayNotify(ServerRequest request) {
+        return request.bodyToMono(NewebPayNotifyReqDTO.class)
+                .doOnNext(notifyReq -> log.info("接收藍星支付通知: {}", notifyReq))
+                .flatMap(newebPayService::handleNewebPayResult)
+                .flatMap(result -> createSuccessResponse("handleNewebPayNotify", result))
+                .switchIfEmpty(ServerResponse.noContent().build())
+                .onErrorResume(ex -> handleError("handleNewebPayNotify", ex));
     }
 
     public Mono<ServerResponse> test(ServerRequest request) {

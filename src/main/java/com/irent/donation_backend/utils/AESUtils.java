@@ -205,7 +205,7 @@ public class AESUtils {
     /**
      * SHA-256雜湊
      */
-    public static String sha256(String key, String iv, String content) {
+    public String sha256(String key, String iv, String content) {
         if (key == null || iv == null || content == null) {
             throw new IllegalArgumentException("參數不能為空");
         }
