@@ -24,16 +24,16 @@ public class NewebPayService {
     public Mono<NewebPayReqDTO> generateNewebPayRequest(OrderInfoDTO orderInfoDTO) {
         try {
             String tradeInfo = aesUtils.encryptPay2go(
-                    newebPayProperties.getHASH_KEY(),
-                    newebPayProperties.getHASH_IV(),
+                    newebPayProperties.getHashKey(),
+                    newebPayProperties.getHashIv(),
                     buildTradeInfoData(orderInfoDTO).generateTradeInfoString()
             );
 
             return Mono.just(NewebPayReqDTO.builder()
-                    .merchantID(newebPayProperties.getMERCHANT_ID())
+                    .merchantID(newebPayProperties.getMerchantId())
                     .tradeInfo(tradeInfo)
-                    .tradeSha(aesUtils.sha256(newebPayProperties.getHASH_KEY(), newebPayProperties.getHASH_IV(), tradeInfo))
-                    .version(newebPayProperties.getVERSION())
+                    .tradeSha(aesUtils.sha256(newebPayProperties.getHashKey(), newebPayProperties.getHashIv(), tradeInfo))
+                    .version(newebPayProperties.getVersion())
                     .orderId(orderInfoDTO.getOrderId())
                     .build());
         } catch (Exception e) {
@@ -43,18 +43,18 @@ public class NewebPayService {
 
     private TradeInfoData buildTradeInfoData(OrderInfoDTO orderInfoDTO) {
         return TradeInfoData.builder()
-                .merchantID(newebPayProperties.getMERCHANT_ID())
+                .merchantID(newebPayProperties.getMerchantId())
                 .respondType("JSON")
                 .timeStamp(String.valueOf(System.currentTimeMillis() / 1000))
-                .version(newebPayProperties.getVERSION())
+                .version(newebPayProperties.getVersion())
                 .langType(orderInfoDTO.getLangType())
                 .merchantOrderNo(orderInfoDTO.getOrderId())
                 .amt(orderInfoDTO.getAmount())
                 .itemDesc(orderInfoDTO.getItemDesc())
-                .tradeLimit(newebPayProperties.getTRADE_LIMIT())
-                .returnURL(newebPayProperties.getRETURN_URL() + "/" + orderInfoDTO.getCustomerName())
-                .notifyURL(newebPayProperties.getNOTIFY_URL())
-                .clientBackURL(newebPayProperties.getCLIENT_BACK_URL() + "/" + orderInfoDTO.getCustomerName())
+                .tradeLimit(newebPayProperties.getTradeLimit())
+                .returnURL(newebPayProperties.getReturnUrl())
+                .notifyURL(newebPayProperties.getNotifyUrl())
+                .clientBackURL(newebPayProperties.getClientBackUrl() + "/" + orderInfoDTO.getCustomerName())
                 .email(orderInfoDTO.getEmail())
                 .instFlag("1")
                 .build();
@@ -81,8 +81,8 @@ public class NewebPayService {
     private boolean verifyTradeSha(NewebPayNotifyReqDTO reqDTO) {
         try {
             String calculatedSha = aesUtils.sha256(
-                    newebPayProperties.getHASH_KEY(),
-                    newebPayProperties.getHASH_IV(),
+                    newebPayProperties.getHashKey(),
+                    newebPayProperties.getHashIv(),
                     reqDTO.getTradeInfo()
             );
             return calculatedSha.equalsIgnoreCase(reqDTO.getTradeSha());
@@ -93,8 +93,8 @@ public class NewebPayService {
 
     private NewebPayNotifyResData decryptTradeInfo(NewebPayNotifyReqDTO reqDTO) throws Exception {
         String decryptedInfo = aesUtils.decryptPay2go(
-                newebPayProperties.getHASH_KEY(),
-                newebPayProperties.getHASH_IV(),
+                newebPayProperties.getHashKey(),
+                newebPayProperties.getHashIv(),
                 reqDTO.getTradeInfo()
         );
         return jsonUtils.parseJson(decryptedInfo, new TypeReference<>() {

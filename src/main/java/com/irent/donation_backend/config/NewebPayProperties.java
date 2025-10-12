@@ -10,17 +10,17 @@ import org.springframework.stereotype.Component;
 @Setter
 @ConfigurationProperties(prefix = "newebpay", ignoreInvalidFields = true)
 public class NewebPayProperties {
-    private String URL;
-    private String MERCHANT_ID;
-    private String HASH_KEY;
-    private String HASH_IV;
-    private String PAY_GATEWAY;
-    private String RETURN_URL;
-    private String RETURN_FRONTEND;
-    private String RETURN_FRONTEND_FAIL;
-    private String CLIENT_BACK_URL;
-    private String NOTIFY_URL;
-    private String PAYMENT_URL;
-    private String VERSION;
-    private Integer TRADE_LIMIT = 600;
+    private String url;
+    private String merchantId;
+    private String hashKey;
+    private String hashIv;
+    private String payGateway;
+    private String returnUrl;
+    private String returnFrontend;
+    private String returnFrontendFail;
+    private String clientBackUrl;
+    private String notifyUrl;
+    private String paymentUrl;
+    private String version;
+    private Integer tradeLimit = 600;
 }

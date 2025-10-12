@@ -20,13 +20,13 @@ public class NewebPayConfigValidator implements ApplicationListener<ApplicationR
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         logger.info("=== NewebPay 配置檢查 ===");
-        logger.info("MERCHANT_ID: {}", newebPayProperties.getMERCHANT_ID());
-        logger.info("RETURN_URL: {}", newebPayProperties.getRETURN_URL());
-        logger.info("RETURN_FRONTEND: {}", newebPayProperties.getRETURN_FRONTEND());
-        logger.info("RETURN_FRONTEND_FAIL: {}", newebPayProperties.getRETURN_FRONTEND_FAIL());
-        logger.info("NOTIFY_URL: {}", newebPayProperties.getNOTIFY_URL());
-        logger.info("CLIENT_BACK_URL: {}", newebPayProperties.getCLIENT_BACK_URL());
-        logger.info("VERSION: {}", newebPayProperties.getVERSION());
+        logger.info("MERCHANT_ID: {}", newebPayProperties.getMerchantId());
+        logger.info("RETURN_URL: {}", newebPayProperties.getReturnUrl());
+        logger.info("RETURN_FRONTEND: {}", newebPayProperties.getReturnFrontend());
+        logger.info("RETURN_FRONTEND_FAIL: {}", newebPayProperties.getReturnFrontendFail());
+        logger.info("NOTIFY_URL: {}", newebPayProperties.getNotifyUrl());
+        logger.info("CLIENT_BACK_URL: {}", newebPayProperties.getClientBackUrl());
+        logger.info("VERSION: {}", newebPayProperties.getVersion());
     }
 
 }
