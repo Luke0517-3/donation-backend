@@ -47,6 +47,7 @@ public class DonationRoutes {
         public static class NewebPay {
             public static final String RETRIEVE = "/newebpay/retrieve";
             public static final String NOTIFY = "/newebpay/notify";
+            public static final String REDIRECT = "/newebpay/redirect";
         }
     }
 
@@ -54,8 +55,8 @@ public class DonationRoutes {
      * 註冊 DonationHandler Bean
      */
     @Bean
-    public DonationHandler donationHandler(DonationService donationService, NewebPayService newebPayService) {
-        return new DonationHandler(donationService, newebPayService);
+    public DonationHandler donationHandler(DonationService donationService, NewebPayService newebPayService, NewebPayProperties newebPayProperties) {
+        return new DonationHandler(donationService, newebPayService, newebPayProperties);
     }
 
     /**
@@ -136,8 +137,16 @@ public class DonationRoutes {
                         NewebPayNotifyReqDTO.class, String.class)
         ).build();
 
+        // 處理支付返回路由
+        RouterFunction<ServerResponse> redirectRoute = SpringdocRouteBuilder.route().path(ApiPaths.BASE,
+                builder -> builder.POST(ApiPaths.NewebPay.REDIRECT, handler::handleNewebPayReturn),
+                createSwaggerDocs("handleNewebPayReturn", "NewebPay Return Handler",
+                        "處理藍星支付返回並重導向", "接收藍星支付返回結果並根據狀態重導向到成功或失敗頁面",
+                        NewebPayNotifyReqDTO.class, Void.class)
+        ).build();
+
         // 合併並返回所有藍星支付相關路由
-        return retrieveRoute.and(notifyRoute);
+        return retrieveRoute.and(notifyRoute).and(redirectRoute);
     }
 
     /**

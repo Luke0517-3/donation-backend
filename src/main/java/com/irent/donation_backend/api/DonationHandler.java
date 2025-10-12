@@ -1,5 +1,7 @@
 package com.irent.donation_backend.api;
 
+import com.irent.donation_backend.common.Constants;
+import com.irent.donation_backend.config.NewebPayProperties;
 import com.irent.donation_backend.model.lark.NGOOrderFields;
 import com.irent.donation_backend.model.newebpay.NewebPayNotifyReqDTO;
 import com.irent.donation_backend.model.newebpay.OrderInfoDTO;
@@ -14,12 +16,15 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
+
 @Slf4j
 @RequiredArgsConstructor
 public class DonationHandler {
 
     private final DonationService donationService;
     private final NewebPayService newebPayService;
+    private final NewebPayProperties newebPayProperties;
 
     /**
      * 創建成功回應，使用RespBodyDTO包裝
@@ -101,5 +106,19 @@ public class DonationHandler {
                 .flatMap(fields -> createSuccessResponse("queryStoreInfo", fields))
                 .switchIfEmpty(ServerResponse.noContent().build())
                 .onErrorResume(ex -> handleError("queryStoreInfo", ex));
+    }
+
+    /**
+     * 判斷藍星金流交易結果，導回對應頁面
+     */
+    public Mono<ServerResponse> handleNewebPayReturn(ServerRequest request) {
+        return request.bodyToMono(NewebPayNotifyReqDTO.class)
+                .doOnNext(notifyReq -> log.info("接收藍星支付返回結果: {}", notifyReq))
+                .flatMap(dto -> ServerResponse.temporaryRedirect(
+                                URI.create(Constants.SUCCESS.equals(dto.getStatus())
+                                        ? newebPayProperties.getRETURN_FRONTEND()
+                                        : newebPayProperties.getRETURN_FRONTEND_FAIL()))
+                        .build())
+                .onErrorResume(ex -> handleError("handleNewebPayReturn", ex));
     }
 }
