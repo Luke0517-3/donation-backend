@@ -95,7 +95,7 @@ public class DonationHandler {
      * 查詢訂單資訊
      */
     public Mono<ServerResponse> queryOrderInfo(ServerRequest request) {
-        return Mono.just(request.pathVariable("recordId"))
+        return Mono.just(request.pathVariable("orderId"))
                 .doOnNext(recordId -> log.info("查詢訂單資訊: {}", recordId))
                 .flatMap(donationService::queryOrderInfo)
                 .flatMap(fields -> createSuccessResponse("queryStoreInfo", fields))

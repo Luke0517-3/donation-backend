@@ -41,7 +41,7 @@ public class DonationRoutes {
 
         public static class Order {
             public static final String CREATE = "/order/create";
-            public static final String QUERY = "/order/{recordId}";
+            public static final String QUERY = "/order/{orderId}";
         }
 
         public static class NewebPay {
@@ -105,10 +105,10 @@ public class DonationRoutes {
                         "查詢訂單資訊", "查詢訂單資訊",
                         null, Object.class)
                         .andThen(ops -> ops.parameter(parameterBuilder()
-                                .name("recordId")
+                                .name("orderId")
                                 .in(ParameterIn.PATH)
                                 .required(true)
-                                .description("記錄 ID")
+                                .description("訂單編號")
                                 .schema(schemaBuilder().type("string"))))
         ).build();
 

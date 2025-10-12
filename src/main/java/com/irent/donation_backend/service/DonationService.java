@@ -13,5 +13,5 @@ public interface DonationService {
 
     Mono<String> updateOrder(String recordId, Integer payStatus);
 
-    Mono<Object> queryOrderInfo(String recordId);
+    Mono<Object> queryOrderInfo(String orderId);
 }

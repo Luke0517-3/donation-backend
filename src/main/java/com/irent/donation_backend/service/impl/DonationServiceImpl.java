@@ -33,8 +33,8 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
-    public Mono<Object> queryOrderInfo(String recordId) {
-        return larkService.queryOrderInfo(recordId);
+    public Mono<Object> queryOrderInfo(String orderId) {
+        return larkService.queryOrderInfo(orderId);
     }
 
 

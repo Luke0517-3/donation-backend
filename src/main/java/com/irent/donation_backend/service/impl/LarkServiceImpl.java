@@ -151,10 +151,10 @@ public class LarkServiceImpl implements LarkService {
     }
 
     @Override
-    public Mono<Object> queryOrderInfo(String recordId) {
+    public Mono<Object> queryOrderInfo(String orderId) {
         Map<String, Object> requestBody = Map.of(
                 "filter", Map.of(
-                        "conditions", List.of(Map.of("field_name", "ORDER_ID", "operator", "is", "value", List.of(recordId))),
+                        "conditions", List.of(Map.of("field_name", "ORDER_ID", "operator", "is", "value", List.of(orderId))),
                         "conjunction", "and"
                 )
         );
@@ -164,7 +164,7 @@ public class LarkServiceImpl implements LarkService {
                 HttpMethod.POST,
                 requestBody,
                 jsonNode -> {
-                    validateApiResponse(jsonNode, "訂單查詢失敗", "recordId: " + recordId);
+                    validateApiResponse(jsonNode, "訂單查詢失敗", "orderId: " + orderId);
                     JsonNode itemsNode = jsonNode.get("data").get("items");
                     List<Object> res = itemsNode.isArray()
                             ? jsonUtils.convertNodeToType(itemsNode, new TypeReference<>() {
@@ -175,7 +175,7 @@ public class LarkServiceImpl implements LarkService {
                             .orElseThrow(() -> new RuntimeException("No customer found"));
                 },
                 larkProperties.getORDER_TABLE_ID(),
-                recordId
+                orderId
         );
     }
 
