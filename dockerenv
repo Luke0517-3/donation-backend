@@ -1,0 +1,11 @@
+newebpay.url=https://ngo.i-share.com.tw/donor-info
+newebpay.merchant-id=MS156977190
+newebpay.hash-key=LnornW1zAa43gVRZZnXEwinUK5FQNQKU
+newebpay.hash-iv=CBuSp1In6UQcqB3P
+newebpay.pay-gateway=https://ccore.newebpay.com/MPG/mpg_gateway
+newebpay.return-url=https://ngo.i-share.com.tw/api/donation/newebpay/return
+newebpay.return-frontend=https://ngo.i-share.com.tw/donor/paymentSuccessful
+newebpay.return-frontend-fail=https://ngo.i-share.com.tw/donor/paymentFailed
+newebpay.notify-url=https://ngo.i-share.com.tw/api/donation/newebpay/notify
+newebpay.client-back-url=https://ngo.i-share.com.tw/donor-info
+newebpay.version=2.0
