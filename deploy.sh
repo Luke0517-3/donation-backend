@@ -2,9 +2,9 @@
 # donation-backend應用程式打包和Docker部署腳本
 
 # 設定變數
-APP_NAME="donation-backend"
-IMAGE_NAME="donation-backend-image"
-CONTAINER_NAME="donation-backend-container"
+APP_NAME="ngo-backend"
+IMAGE_NAME="ngo-backend"
+CONTAINER_NAME="ngo-backend"
 PORT=8080
 ENV_FILE="dockerenv"
 
@@ -44,12 +44,13 @@ fi
 
 # 執行新容器，使用環境變數檔案
 echo "4. 啟動新容器..."
-docker run -d --name $CONTAINER_NAME -p $PORT:8080 --env-file $ENV_FILE $IMAGE_NAME
+docker run --net=host  -it -d --restart=always --name $CONTAINER_NAME --env-file $ENV_FILE $IMAGE_NAME
 if [ $? -ne 0 ]; then
   echo "容器啟動失敗"
   exit 1
 fi
 
 echo "===== 部署完成 ====="
-echo "應用程式已成功部署在: http://localhost:$PORT"
 echo "查看容器日誌: docker logs -f $CONTAINER_NAME"
+docker logs $CONTAINER_NAME
+docker ps -a | grep $CONTAINER_NAME

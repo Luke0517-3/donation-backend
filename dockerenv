@@ -9,3 +9,5 @@ newebpay.return-frontend-fail=https://ngo.i-share.com.tw/donor/paymentFailed
 newebpay.notify-url=https://ngo.i-share.com.tw/api/donation/newebpay/notify
 newebpay.client-back-url=https://ngo.i-share.com.tw/donor-info
 newebpay.version=2.0
+
+spring.webflux.base-path=/donation-service
