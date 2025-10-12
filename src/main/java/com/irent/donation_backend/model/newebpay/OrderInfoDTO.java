@@ -50,4 +50,11 @@ public class OrderInfoDTO {
                 付款人的電子郵件地址
             """, example = "abc123@qoo.com")
     private String email;
+
+    @Schema(description = """
+                機構名稱：
+                付款人選擇捐款的機構名稱
+            """, example = "TzuChi")
+    private String customerName;
+
 }

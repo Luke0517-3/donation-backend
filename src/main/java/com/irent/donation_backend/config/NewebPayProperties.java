@@ -21,7 +21,6 @@ public class NewebPayProperties {
     private String CLIENT_BACK_URL;
     private String NOTIFY_URL;
     private String PAYMENT_URL;
-    private String CLIENT_BACK;
     private String VERSION;
     private Integer TRADE_LIMIT = 600;
 }

@@ -52,9 +52,9 @@ public class NewebPayService {
                 .amt(orderInfoDTO.getAmount())
                 .itemDesc(orderInfoDTO.getItemDesc())
                 .tradeLimit(newebPayProperties.getTRADE_LIMIT())
-                .returnURL(newebPayProperties.getRETURN_URL())
+                .returnURL(newebPayProperties.getRETURN_URL() + "/" + orderInfoDTO.getCustomerName())
                 .notifyURL(newebPayProperties.getNOTIFY_URL())
-                .clientBackURL(newebPayProperties.getCLIENT_BACK_URL())
+                .clientBackURL(newebPayProperties.getCLIENT_BACK_URL() + "/" + orderInfoDTO.getCustomerName())
                 .email(orderInfoDTO.getEmail())
                 .instFlag("1")
                 .build();
