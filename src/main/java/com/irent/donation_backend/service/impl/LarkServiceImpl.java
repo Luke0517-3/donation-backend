@@ -47,8 +47,8 @@ public class LarkServiceImpl implements LarkService {
         return authWebClient.post()
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(Map.of(
-                        "app_id", larkProperties.getAPP_ID(),
-                        "app_secret", larkProperties.getAPP_SECRET()
+                        "app_id", larkProperties.getAppId(),
+                        "app_secret", larkProperties.getAppSecret()
                 ))
                 .retrieve()
                 .bodyToMono(String.class)
@@ -129,7 +129,7 @@ public class LarkServiceImpl implements LarkService {
                     validateApiResponse(jsonNode, "訂單更新失敗", "recordId: " + recordId);
                     return Constants.SUCCESS;
                 },
-                larkProperties.getORDER_TABLE_ID(),
+                larkProperties.getOrderTableId(),
                 recordId
         );
     }
@@ -145,7 +145,7 @@ public class LarkServiceImpl implements LarkService {
                     validateApiResponse(jsonNode, "訂單更新失敗", "recordId: " + recordId);
                     return Constants.SUCCESS;
                 },
-                larkProperties.getORDER_TABLE_ID(),
+                larkProperties.getOrderTableId(),
                 recordId
         );
     }
@@ -174,7 +174,7 @@ public class LarkServiceImpl implements LarkService {
                             .findFirst()
                             .orElseThrow(() -> new RuntimeException("No customer found"));
                 },
-                larkProperties.getORDER_TABLE_ID(),
+                larkProperties.getOrderTableId(),
                 orderId
         );
     }
@@ -224,7 +224,7 @@ public class LarkServiceImpl implements LarkService {
     private Object[] buildPathVariables(String tableId, Object... additionalPathVariables) {
         int extraLength = additionalPathVariables != null ? additionalPathVariables.length : 0;
         Object[] pathVars = new Object[2 + extraLength];
-        pathVars[0] = larkProperties.getAPP_TOKEN();
+        pathVars[0] = larkProperties.getAppToken();
         pathVars[1] = tableId;
 
         if (extraLength > 0) {
@@ -242,8 +242,8 @@ public class LarkServiceImpl implements LarkService {
     ) {
         String tableId = method == HttpMethod.POST && body instanceof Map<?, ?> bodyMap
                 && bodyMap.containsKey("fields")
-                ? larkProperties.getORDER_TABLE_ID()
-                : larkProperties.getTABLE_ID();
+                ? larkProperties.getOrderTableId()
+                : larkProperties.getTableId();
 
         return executeRequest(path, method, body, responseProcessor, tableId);
     }

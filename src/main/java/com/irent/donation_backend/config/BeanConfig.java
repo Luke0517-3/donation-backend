@@ -22,7 +22,7 @@ public class BeanConfig {
     @Bean
     public WebClient authWebClient(WebClient.Builder builder, LarkProperties properties) {
         return builder
-                .baseUrl(properties.getAUTH_URL())
+                .baseUrl(properties.getAuthUrl())
                 .clientConnector(new ReactorClientHttpConnector(httpClient()))
                 .build();
     }
@@ -30,7 +30,7 @@ public class BeanConfig {
     @Bean
     public WebClient bitableWebClient(WebClient.Builder builder, LarkProperties properties) {
         return builder
-                .baseUrl(properties.getBITABLE_URL())
+                .baseUrl(properties.getBitableUrl())
                 .clientConnector(new ReactorClientHttpConnector(httpClient()))
                 .build();
     }

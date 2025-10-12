@@ -10,11 +10,11 @@ import org.springframework.stereotype.Component;
 @Setter
 @ConfigurationProperties(prefix = "lark", ignoreInvalidFields = true)
 public class LarkProperties {
-    private String AUTH_URL;
-    private String APP_ID;
-    private String APP_SECRET;
-    private String APP_TOKEN;
-    private String TABLE_ID;
-    private String BITABLE_URL;
-    private String ORDER_TABLE_ID;
+    private String authUrl;
+    private String appId;
+    private String appSecret;
+    private String appToken;
+    private String tableId;
+    private String bitableUrl;
+    private String orderTableId;
 }
