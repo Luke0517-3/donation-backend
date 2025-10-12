@@ -33,11 +33,21 @@ public class DonationRoutes {
      */
     public static class ApiPaths {
         public static final String BASE = "/api/donation";
-        public static final String CUSTOMER = "/customer/{name}";
-        public static final String ORDER = "/create/order";
-        public static final String NEWEBPAY = "/newebpay/retrieve";
-        public static final String TEST = "/test/{recordId}";
-        public static final String NEWEBPAY_NOTIFY = "/newebpay/notify";
+
+        // 按業務功能分類的路徑
+        public static class Customer {
+            public static final String GET_INFO = "/customer/{name}";
+        }
+
+        public static class Order {
+            public static final String CREATE = "/order/create";
+            public static final String QUERY = "/order/{recordId}";
+        }
+
+        public static class NewebPay {
+            public static final String RETRIEVE = "/newebpay/retrieve";
+            public static final String NOTIFY = "/newebpay/notify";
+        }
     }
 
     /**
@@ -53,20 +63,17 @@ public class DonationRoutes {
      */
     @Bean
     public RouterFunction<ServerResponse> donationRouterFunction(final DonationHandler handler) {
-        return customerRoute(handler)
-                .and(orderRoute(handler))
-                .and(newebPayRoute(handler))
-                .and(newebPayNotifyRoute(handler))
-        // 如需啟用測試路由，請取消下面註解
-         .and(testRoute(handler));
+        return customerRoutes(handler)
+                .and(orderRoutes(handler))
+                .and(newebPayRoutes(handler));
     }
 
     /**
-     * 取得捐款目標機構資訊路由
+     * 客戶相關路由
      */
-    protected RouterFunction<ServerResponse> customerRoute(final DonationHandler handler) {
+    protected RouterFunction<ServerResponse> customerRoutes(final DonationHandler handler) {
         return SpringdocRouteBuilder.route().path(ApiPaths.BASE,
-                builder -> builder.GET(ApiPaths.CUSTOMER, handler::getCustomer),
+                builder -> builder.GET(ApiPaths.Customer.GET_INFO, handler::getCustomer),
                 createSwaggerDocs("getCustomer", "Get Customer Info",
                         "取得捐款目標機構資訊", "取得捐款目標機構資訊",
                         null, Customer.class)
@@ -80,49 +87,22 @@ public class DonationRoutes {
     }
 
     /**
-     * 建立捐款訂單並取得藍星支付請求資訊路由
+     * 訂單相關路由
      */
-    protected RouterFunction<ServerResponse> orderRoute(final DonationHandler handler) {
-        return SpringdocRouteBuilder.route().path(ApiPaths.BASE,
-                builder -> builder.POST(ApiPaths.ORDER, handler::createOrder),
-                createSwaggerDocs("createOrder", "Create Order For Donation and Retrieve NewebPay Request",
+    protected RouterFunction<ServerResponse> orderRoutes(final DonationHandler handler) {
+        // 創建訂單路由
+        RouterFunction<ServerResponse> createOrderRoute = SpringdocRouteBuilder.route().path(ApiPaths.BASE,
+                builder -> builder.POST(ApiPaths.Order.CREATE, handler::createOrder),
+                createSwaggerDocs("createOrder", "Create Order For Donation",
                         "建立捐款訂單並取得藍星支付請求資訊", "建立捐款訂單並取得藍星支付請求資訊",
                         NGOOrderFields.class, NewebPayReqDTO.class)
         ).build();
-    }
 
-    /**
-     * 藍星支付請求路由
-     */
-    protected RouterFunction<ServerResponse> newebPayRoute(final DonationHandler handler) {
-        return SpringdocRouteBuilder.route().path(ApiPaths.BASE,
-                builder -> builder.POST(ApiPaths.NEWEBPAY, handler::retrieveNewebPayRequest),
-                createSwaggerDocs("retrieveNewebPayRequest", "Retrieve NewebPay Request",
-                        "取得藍星支付請求資訊", "取得藍星支付請求資訊",
-                        OrderInfoDTO.class, NewebPayReqDTO.class)
-        ).build();
-    }
-
-    /**
-     * 藍新支付通知路由
-     */
-    protected RouterFunction<ServerResponse> newebPayNotifyRoute(final DonationHandler handler) {
-        return SpringdocRouteBuilder.route().path(ApiPaths.BASE,
-                builder -> builder.POST(ApiPaths.NEWEBPAY_NOTIFY, handler::handleNewebPayNotify),
-                createSwaggerDocs("handleNewebPayNotify", "NewebPay Notification Handler",
-                        "處理藍新支付通知", "接收並處理藍新支付結果通知",
-                        NewebPayNotifyReqDTO.class, String.class)
-        ).build();
-    }
-
-    /**
-     * 測試用路由
-     */
-    protected RouterFunction<ServerResponse> testRoute(final DonationHandler handler) {
-        return SpringdocRouteBuilder.route().path(ApiPaths.BASE,
-                builder -> builder.POST(ApiPaths.TEST, handler::test),
-                createSwaggerDocs("test", "For test",
-                        "測試用", "測試用",
+        // 查詢訂單路由
+        RouterFunction<ServerResponse> queryOrderRoute = SpringdocRouteBuilder.route().path(ApiPaths.BASE,
+                builder -> builder.GET(ApiPaths.Order.QUERY, handler::queryOrderInfo),
+                createSwaggerDocs("queryOrderInfo", "Query Order Info",
+                        "查詢訂單資訊", "查詢訂單資訊",
                         null, Object.class)
                         .andThen(ops -> ops.parameter(parameterBuilder()
                                 .name("recordId")
@@ -131,18 +111,37 @@ public class DonationRoutes {
                                 .description("記錄 ID")
                                 .schema(schemaBuilder().type("string"))))
         ).build();
+
+        // 合併並返回所有訂單相關路由
+        return createOrderRoute.and(queryOrderRoute);
+    }
+
+    /**
+     * 藍星支付相關路由
+     */
+    protected RouterFunction<ServerResponse> newebPayRoutes(final DonationHandler handler) {
+        // 取得支付請求路由
+        RouterFunction<ServerResponse> retrieveRoute = SpringdocRouteBuilder.route().path(ApiPaths.BASE,
+                builder -> builder.POST(ApiPaths.NewebPay.RETRIEVE, handler::retrieveNewebPayRequest),
+                createSwaggerDocs("retrieveNewebPayRequest", "Retrieve NewebPay Request",
+                        "取得藍星支付請求資訊", "取得藍星支付請求資訊",
+                        OrderInfoDTO.class, NewebPayReqDTO.class)
+        ).build();
+
+        // 處理支付通知路由
+        RouterFunction<ServerResponse> notifyRoute = SpringdocRouteBuilder.route().path(ApiPaths.BASE,
+                builder -> builder.POST(ApiPaths.NewebPay.NOTIFY, handler::handleNewebPayNotify),
+                createSwaggerDocs("handleNewebPayNotify", "NewebPay Notification Handler",
+                        "處理藍新支付通知", "接收並處理藍新支付結果通知",
+                        NewebPayNotifyReqDTO.class, String.class)
+        ).build();
+
+        // 合併並返回所有藍星支付相關路由
+        return retrieveRoute.and(notifyRoute);
     }
 
     /**
      * 建立 Swagger 文檔設定
-     *
-     * @param methodName   處理方法名稱
-     * @param operationId  操作 ID
-     * @param summary      摘要
-     * @param description  描述
-     * @param requestType  請求體類型，如不需要可傳 null
-     * @param responseType 回應類型
-     * @return Swagger 配置
      */
     private <T, R> Consumer<Builder> createSwaggerDocs(
             String methodName, String operationId, String summary, String description,

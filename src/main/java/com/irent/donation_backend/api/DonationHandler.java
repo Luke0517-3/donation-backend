@@ -91,10 +91,13 @@ public class DonationHandler {
                 .onErrorResume(ex -> handleError("handleNewebPayNotify", ex));
     }
 
-    public Mono<ServerResponse> test(ServerRequest request) {
+    /**
+     * 查詢訂單資訊
+     */
+    public Mono<ServerResponse> queryOrderInfo(ServerRequest request) {
         return Mono.just(request.pathVariable("recordId"))
-                .doOnNext(recordId -> log.info("測試更新訂單: {}", recordId))
-                .flatMap(recordId -> donationService.queryOrderInfo(recordId))
+                .doOnNext(recordId -> log.info("查詢訂單資訊: {}", recordId))
+                .flatMap(donationService::queryOrderInfo)
                 .flatMap(fields -> createSuccessResponse("queryStoreInfo", fields))
                 .switchIfEmpty(ServerResponse.noContent().build())
                 .onErrorResume(ex -> handleError("queryStoreInfo", ex));
