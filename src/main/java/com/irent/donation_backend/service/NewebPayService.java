@@ -19,16 +19,20 @@ public class NewebPayService {
     private final NewebPayProperties newebPayProperties;
     private final AESUtils aesUtils;
     private final JsonUtils jsonUtils;
+    private final LarkService larkService;
 
     public Mono<NewebPayReqDTO> generateNewebPayRequest(OrderInfoDTO orderInfoDTO) {
         try {
-            TradeInfoData tradeInfoData = buildTradeInfoData(orderInfoDTO);
-            String encryptTradeInfoData = aesUtils.encryptPay2go(newebPayProperties.getHASH_KEY(), newebPayProperties.getHASH_IV(), tradeInfoData.generateTradeInfoString());
+            String tradeInfo = aesUtils.encryptPay2go(
+                    newebPayProperties.getHASH_KEY(),
+                    newebPayProperties.getHASH_IV(),
+                    buildTradeInfoData(orderInfoDTO).generateTradeInfoString()
+            );
 
             return Mono.just(NewebPayReqDTO.builder()
                     .merchantID(newebPayProperties.getMERCHANT_ID())
-                    .tradeInfo(encryptTradeInfoData)
-                    .tradeSha(aesUtils.sha256(newebPayProperties.getHASH_KEY(), newebPayProperties.getHASH_IV(), encryptTradeInfoData))
+                    .tradeInfo(tradeInfo)
+                    .tradeSha(aesUtils.sha256(newebPayProperties.getHASH_KEY(), newebPayProperties.getHASH_IV(), tradeInfo))
                     .version(newebPayProperties.getVERSION())
                     .orderId(orderInfoDTO.getOrderId())
                     .build());
@@ -49,7 +53,7 @@ public class NewebPayService {
                 .itemDesc(orderInfoDTO.getItemDesc())
                 .tradeLimit(newebPayProperties.getTRADE_LIMIT())
                 .returnURL(newebPayProperties.getRETURN_URL())
-                .notifyURL(newebPayProperties.getNOTIFY_URL() + "/" + orderInfoDTO.getOrderId())
+                .notifyURL(newebPayProperties.getNOTIFY_URL())
                 .clientBackURL(newebPayProperties.getCLIENT_BACK_URL())
                 .email(orderInfoDTO.getEmail())
                 .instFlag("1")
@@ -58,17 +62,14 @@ public class NewebPayService {
 
     public Mono<String> handleNewebPayResult(NewebPayNotifyReqDTO newebPayNotifyReqDTO) {
         try {
-
-            if (!verifyTradeSha(newebPayProperties.getHASH_KEY(), newebPayProperties.getHASH_IV(), newebPayNotifyReqDTO.getTradeInfo(), newebPayNotifyReqDTO.getTradeSha())) {
+            if (!verifyTradeSha(newebPayNotifyReqDTO)) {
                 return Mono.error(new IllegalArgumentException("TradeSha 驗證失敗"));
             }
 
-            String decryptTradeInfo = aesUtils.decryptPay2go(newebPayProperties.getHASH_KEY(), newebPayProperties.getHASH_IV(), newebPayNotifyReqDTO.getTradeInfo());
-            NewebPayNotifyResData newebPayNotifyResData = jsonUtils.parseJson(decryptTradeInfo, new TypeReference<>() {});
-            log.info("NewebPay 交易結果: {}", newebPayNotifyResData);
-            processPaymentResult(newebPayNotifyResData);
+            NewebPayNotifyResData resData = decryptTradeInfo(newebPayNotifyReqDTO);
+            log.info("NewebPay 交易結果: {}", resData);
 
-            return Mono.just(Constants.SUCCESS_MSG);
+            return processPaymentResult(resData).thenReturn(Constants.SUCCESS_MSG);
         } catch (Exception e) {
             return Mono.error(e);
         }
@@ -77,29 +78,41 @@ public class NewebPayService {
     /**
      * 驗證TradeSha (SHA256雜湊值)
      */
-    private boolean verifyTradeSha(String key, String iv, String tradeInfo, String tradeSha) {
+    private boolean verifyTradeSha(NewebPayNotifyReqDTO reqDTO) {
         try {
-            String calculatedTradeSha = aesUtils.sha256(key, iv, tradeInfo);
-            return calculatedTradeSha.equalsIgnoreCase(tradeSha);
+            String calculatedSha = aesUtils.sha256(
+                    newebPayProperties.getHASH_KEY(),
+                    newebPayProperties.getHASH_IV(),
+                    reqDTO.getTradeInfo()
+            );
+            return calculatedSha.equalsIgnoreCase(reqDTO.getTradeSha());
         } catch (Exception e) {
             return false;
         }
     }
 
+    private NewebPayNotifyResData decryptTradeInfo(NewebPayNotifyReqDTO reqDTO) throws Exception {
+        String decryptedInfo = aesUtils.decryptPay2go(
+                newebPayProperties.getHASH_KEY(),
+                newebPayProperties.getHASH_IV(),
+                reqDTO.getTradeInfo()
+        );
+        return jsonUtils.parseJson(decryptedInfo, new TypeReference<>() {
+        });
+    }
+
     /**
      * 處理支付結果
      */
-    public void processPaymentResult(NewebPayNotifyResData resData) {
+    private Mono<Void> processPaymentResult(NewebPayNotifyResData resData) {
         String orderNo = resData.getResult().getMerchantOrderNo();
         log.info("Processing payment result for order: {}", orderNo);
 
-        if (Constants.SUCCESS.equals(resData.getStatus())) {
-            // TODO: 更新訂單狀態為已付款
-
-        } else {
-            // TODO: 更新訂單狀態為付款失敗
-
-        }
+        int status = Constants.SUCCESS.equals(resData.getStatus()) ? 1 : 2;
+        return larkService.updateDonationOrder(orderNo, status)
+                .doOnSuccess(result -> log.info("Order {} updated to status {}.", orderNo, status))
+                .doOnError(error -> log.error("Failed to update order {}: {}", orderNo, error.getMessage()))
+                .then();
     }
-    
+
 }
