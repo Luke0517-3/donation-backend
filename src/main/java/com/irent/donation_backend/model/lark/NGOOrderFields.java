@@ -64,4 +64,10 @@ public class NGOOrderFields {
     @JsonProperty("AMOUNT")
     @Schema(description = "捐款金額")
     private Integer amount;
+
+    @Schema(description = """
+                機構名稱：
+                付款人選擇捐款的機構名稱
+            """, example = "TzuChi")
+    private String customerName;
 }

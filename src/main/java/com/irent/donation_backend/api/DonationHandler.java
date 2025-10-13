@@ -120,7 +120,7 @@ public class DonationHandler {
                 .doOnNext(formData -> log.info("接收藍星支付返回表單數據: {}", formData))
                 .map(this::mapFormDataToNotifyDto)
                 .doOnNext(notifyReq -> log.info("轉換後的藍星支付返回結果: {}", notifyReq))
-                .flatMap(dto -> ServerResponse.temporaryRedirect(
+                .flatMap(dto -> ServerResponse.seeOther(
                                 URI.create(Constants.SUCCESS.equals(dto.getStatus())
                                         ? newebPayProperties.getReturnFrontend()
                                         : newebPayProperties.getReturnFrontendFail()))

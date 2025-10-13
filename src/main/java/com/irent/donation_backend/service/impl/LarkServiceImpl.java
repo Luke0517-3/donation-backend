@@ -113,6 +113,7 @@ public class LarkServiceImpl implements LarkService {
                         .amount(orderFields.getAmount())
                         .itemDesc("愛心捐款")
                         .email(orderFields.getEmail())
+                        .customerName(orderFields.getCustomerName())
                         .build())
         );
     }
