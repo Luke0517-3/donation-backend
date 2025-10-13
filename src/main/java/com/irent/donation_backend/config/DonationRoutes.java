@@ -135,6 +135,11 @@ public class DonationRoutes {
                 createSwaggerDocs("handleNewebPayNotify", "NewebPay Notification Handler",
                         "處理藍新支付通知", "接收並處理藍新支付結果通知",
                         NewebPayNotifyReqDTO.class, String.class)
+                        .andThen(ops -> ops.requestBody(requestBodyBuilder()
+                                .content(contentBuilder()
+                                        .mediaType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                        .schema(schemaBuilder().implementation(NewebPayNotifyReqDTO.class)))
+                                .required(true)))
         ).build();
 
         // 處理支付返回路由
@@ -143,6 +148,11 @@ public class DonationRoutes {
                 createSwaggerDocs("handleNewebPayReturn", "NewebPay Return Handler",
                         "處理藍星支付返回並重導向", "接收藍星支付返回結果並根據狀態重導向到成功或失敗頁面",
                         NewebPayNotifyReqDTO.class, Void.class)
+                        .andThen(ops -> ops.requestBody(requestBodyBuilder()
+                                .content(contentBuilder()
+                                        .mediaType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                                        .schema(schemaBuilder().implementation(NewebPayNotifyReqDTO.class)))
+                                .required(true)))
         ).build();
 
         // 合併並返回所有藍星支付相關路由

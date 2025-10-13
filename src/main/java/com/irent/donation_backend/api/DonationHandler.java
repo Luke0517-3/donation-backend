@@ -12,11 +12,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.util.Objects;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -88,8 +90,10 @@ public class DonationHandler {
      * 接收藍星付款結果資訊
      */
     public Mono<ServerResponse> handleNewebPayNotify(ServerRequest request) {
-        return request.bodyToMono(NewebPayNotifyReqDTO.class)
-                .doOnNext(notifyReq -> log.info("接收藍星支付通知: {}", notifyReq))
+        return request.formData()
+                .doOnNext(formData -> log.info("接收藍星支付通知表單數據: {}", formData))
+                .map(this::mapFormDataToNotifyDto)
+                .doOnNext(notifyReq -> log.info("轉換後的藍星支付通知: {}", notifyReq))
                 .flatMap(newebPayService::handleNewebPayResult)
                 .flatMap(result -> createSuccessResponse("handleNewebPayNotify", result))
                 .switchIfEmpty(ServerResponse.noContent().build())
@@ -112,8 +116,10 @@ public class DonationHandler {
      * 判斷藍星金流交易結果，導回對應頁面
      */
     public Mono<ServerResponse> handleNewebPayReturn(ServerRequest request) {
-        return request.bodyToMono(NewebPayNotifyReqDTO.class)
-                .doOnNext(notifyReq -> log.info("接收藍星支付返回結果: {}", notifyReq))
+        return request.formData()
+                .doOnNext(formData -> log.info("接收藍星支付返回表單數據: {}", formData))
+                .map(this::mapFormDataToNotifyDto)
+                .doOnNext(notifyReq -> log.info("轉換後的藍星支付返回結果: {}", notifyReq))
                 .flatMap(dto -> ServerResponse.temporaryRedirect(
                                 URI.create(Constants.SUCCESS.equals(dto.getStatus())
                                         ? newebPayProperties.getReturnFrontend()
@@ -121,4 +127,23 @@ public class DonationHandler {
                         .build())
                 .onErrorResume(ex -> handleError("handleNewebPayReturn", ex));
     }
+
+    /**
+     * 將表單數據轉換為藍星金流通知DTO
+     */
+    private NewebPayNotifyReqDTO mapFormDataToNotifyDto(MultiValueMap<String, String> formData) {
+        NewebPayNotifyReqDTO dto = new NewebPayNotifyReqDTO();
+
+        // 根據藍星金流表單字段設置DTO屬性
+        dto.setStatus(formData.getFirst("Status"));
+        dto.setMerchantID(formData.getFirst("MerchantID"));
+        dto.setTradeInfo(formData.getFirst("TradeInfo"));
+        dto.setTradeSha(formData.getFirst("TradeSha"));
+        dto.setVersion(formData.getFirst("Version"));
+        dto.setEncryptType(formData.getFirst("EncryptType") != null ?
+                Integer.parseInt(Objects.requireNonNull(formData.getFirst("EncryptType"))) : null);
+
+        return dto;
+    }
+
 }
