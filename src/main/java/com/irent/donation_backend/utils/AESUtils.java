@@ -22,8 +22,8 @@ public class AESUtils {
     private final String AES_CBC_PKCS5 = "AES/CBC/PKCS5Padding";
     private final String AES_CBC_NOPAD = "AES/CBC/NoPadding";
     private final String ALGORITHM_SHA256 = "SHA-256";
-    private String DEFAULT_KEY;
-    private String DEFAULT_IV;
+    private String defaultKey;
+    private String defaultIv;
 
     /**
      * 初始化 AES Cipher 對象
@@ -64,7 +64,7 @@ public class AESUtils {
      * @return 16進制的小寫加密字串
      */
     public String encrypt(String content) throws Exception {
-        return encrypt(content, DEFAULT_KEY, DEFAULT_IV);
+        return encrypt(content, defaultKey, defaultIv);
     }
 
     /**
@@ -97,7 +97,7 @@ public class AESUtils {
      * @return 解密後的內容
      */
     public String decrypt(String encryptedHex) throws Exception {
-        return decrypt(encryptedHex, DEFAULT_KEY, DEFAULT_IV);
+        return decrypt(encryptedHex, defaultKey, defaultIv);
     }
 
     /**
