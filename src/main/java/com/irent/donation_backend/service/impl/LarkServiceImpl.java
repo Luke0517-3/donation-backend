@@ -1,5 +1,6 @@
 package com.irent.donation_backend.service.impl;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.irent.donation_backend.common.Constants;
@@ -20,10 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 @Service
@@ -96,7 +94,26 @@ public class LarkServiceImpl implements LarkService {
     @Override
     public Mono<OrderInfoDTO> createDonationOrder(NGOOrderFields orderFields) {
         orderFields.setPayStatus(0);
-        Map<String, Object> requestBody = Map.of("fields", orderFields);
+        Map<String, Object> fields = new HashMap<>();
+        Arrays.stream(orderFields.getClass().getDeclaredFields())
+                .filter(field -> !field.getName().equals("customerName"))
+                .forEach(field -> {
+                    field.setAccessible(true);
+                    try {
+                        Object value = field.get(orderFields);
+                        if (value != null) {
+                            // get JsonProperty annotation if exists
+                            JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
+                            String key = jsonProperty != null ? jsonProperty.value() : field.getName().toUpperCase();
+                            fields.put(key, value);
+                        }
+                    } catch (IllegalAccessException e) {
+                        log.error("獲取失敗: {}", field.getName(), e);
+                    }
+                });
+
+        Map<String, Object> requestBody = Map.of("fields", fields);
+        System.out.println("requestBody = " + requestBody);
 
         return executeRequest(
                 APP_TOKEN_PATH,
